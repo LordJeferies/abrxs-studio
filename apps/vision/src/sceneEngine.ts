@@ -38,9 +38,10 @@ function sentenceMatching(value: string, pattern: RegExp) {
   return sentences(value).find((sentence) => pattern.test(sentence)) ?? '';
 }
 
-function meaningful(value: string | undefined, fallback: string) {
+function meaningful(value: string | undefined, fallback?: string) {
   const trimmed = value?.trim() ?? '';
-  return trimmed && trimmed !== fallback.trim() ? trimmed : '';
+  const baseline = fallback?.trim() ?? '';
+  return trimmed && trimmed !== baseline ? trimmed : '';
 }
 
 function entry(value: string, level: SceneEvidenceLevel, source: SceneStructureEntry['source']): SceneStructureEntry {
