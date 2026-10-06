@@ -1,3 +1,6 @@
+mod provider_preflight;
+
+use provider_preflight::build_optional_args;
 use serde_json::{json, Value};
 use std::{env, path::PathBuf, process::Command};
 
@@ -46,6 +49,15 @@ fn run_higgsfield(args: &[String]) -> Result<Value, String> {
     }
 }
 
+fn live_model_schema(model_id: &str) -> Result<Value, String> {
+    run_higgsfield(&[
+        "model".into(),
+        "get".into(),
+        model_id.to_string(),
+        "--json".into(),
+    ])
+}
+
 #[tauri::command]
 async fn vision_higgsfield_status() -> Value {
     tauri::async_runtime::spawn_blocking(|| {
@@ -77,9 +89,35 @@ async fn vision_higgsfield_models() -> Result<Value, String> {
 
 #[tauri::command]
 async fn vision_higgsfield_model_get(model_id: String) -> Result<Value, String> {
-    tauri::async_runtime::spawn_blocking(move || run_higgsfield(&["model".into(), "get".into(), model_id, "--json".into()]))
+    tauri::async_runtime::spawn_blocking(move || live_model_schema(&model_id))
         .await
         .map_err(|error| error.to_string())?
+}
+
+#[tauri::command]
+async fn vision_higgsfield_preflight(
+    model_id: String,
+    aspect_ratio: Option<String>,
+    duration: Option<u32>,
+    start_image: Option<String>,
+    resolution: Option<String>,
+) -> Result<Value, String> {
+    if model_id.trim().is_empty() {
+        return Err("A live model id is required for preflight.".into());
+    }
+
+    tauri::async_runtime::spawn_blocking(move || {
+        let schema = live_model_schema(&model_id)?;
+        let (_, plan) = build_optional_args(&schema, aspect_ratio, duration, start_image, resolution)?;
+        Ok(json!({
+            "ok": true,
+            "modelId": model_id,
+            "plan": plan,
+            "schema": schema,
+        }))
+    })
+    .await
+    .map_err(|error| error.to_string())?
 }
 
 #[tauri::command]
@@ -103,26 +141,26 @@ async fn vision_higgsfield_generate(
     }
 
     tauri::async_runtime::spawn_blocking(move || {
-        let mut args = vec!["generate".into(), "create".into(), model_id, "--prompt".into(), prompt];
-        if let Some(value) = aspect_ratio.filter(|value| !value.trim().is_empty()) {
-            args.push("--aspect_ratio".into());
-            args.push(value);
-        }
-        if let Some(value) = duration.filter(|value| *value >= 1 && *value <= 120) {
-            args.push("--duration".into());
-            args.push(value.to_string());
-        }
-        if let Some(value) = start_image.filter(|value| !value.trim().is_empty()) {
-            args.push("--start-image".into());
-            args.push(value);
-        }
-        if let Some(value) = resolution.filter(|value| !value.trim().is_empty()) {
-            args.push("--resolution".into());
-            args.push(value);
-        }
+        let schema = live_model_schema(&model_id)?;
+        let (optional_args, preflight) = build_optional_args(&schema, aspect_ratio, duration, start_image, resolution)?;
+        let mut args = vec![
+            "generate".into(),
+            "create".into(),
+            model_id.clone(),
+            "--prompt".into(),
+            prompt,
+        ];
+        args.extend(optional_args);
         args.push("--wait".into());
         args.push("--json".into());
-        run_higgsfield(&args)
+        let provider_result = run_higgsfield(&args)?;
+        Ok(json!({
+            "ok": true,
+            "provider": "higgsfield",
+            "modelId": model_id,
+            "preflight": preflight,
+            "result": provider_result,
+        }))
     })
     .await
     .map_err(|error| error.to_string())?
@@ -135,6 +173,7 @@ pub fn run() {
             vision_higgsfield_status,
             vision_higgsfield_models,
             vision_higgsfield_model_get,
+            vision_higgsfield_preflight,
             vision_higgsfield_generate,
         ])
         .run(tauri::generate_context!())
