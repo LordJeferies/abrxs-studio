@@ -8,7 +8,12 @@
   ],
   "scripts": {
     "dev": "npm run dev -w @abrxs/studio-web",
+    "dev:web": "npm run dev -w @abrxs/studio-web",
+    "desktop:dev": "npm run dev -w @abrxs/studio-desktop",
     "build": "npm run build -w @abrxs/studio-web",
+    "build:web": "npm run build -w @abrxs/studio-web",
+    "desktop:build": "npm run build -w @abrxs/studio-desktop",
+    "desktop:check": "npm run check -w @abrxs/studio-desktop",
     "typecheck": "npm run typecheck -w @abrxs/studio-web",
     "check": "npm run typecheck && npm run doctor",
     "doctor": "node scripts/doctor.mjs"
