@@ -8,13 +8,14 @@ export type PromptOutputProfileId =
   | 'product-hero'
   | 'clean-plate'
   | 'transparent-layer'
-  | 'social-vertical-video';
+  | 'social-vertical-video'
+  | 'reference-analysis';
 
 export type PromptOutputProfile = {
   id: PromptOutputProfileId;
   label: { en: string; es: string };
   description: { en: string; es: string };
-  kind: 'image' | 'video' | 'layer';
+  kind: 'image' | 'video' | 'layer' | 'analysis';
   defaultMode: 'text-to-image' | 'image-to-image' | 'text-to-video' | 'image-to-video';
   recommendedAspect?: string;
   deliverables: string[];
@@ -147,6 +148,18 @@ export const outputProfiles: PromptOutputProfile[] = [
     promptInstruction: 'Deliver a vertical short-form shot or micro-sequence that reads immediately on mobile, keeps faces/action clear of caption zones and progresses from hook to useful payoff.',
     acceptance: ['mobile readability', 'early visual hook', 'caption-safe framing', 'clear payoff'],
     textPolicy: 'separate-preferred',
+    alpha: false,
+  },
+  {
+    id: 'reference-analysis',
+    label: { en: 'Reference analysis', es: 'Análisis de referencia' },
+    description: { en: 'Structured visual analysis for composition, camera, light, palette, identity and continuity anchors.', es: 'Análisis visual estructurado de composición, cámara, luz, paleta, identidad y anclas de continuidad.' },
+    kind: 'analysis',
+    defaultMode: 'image-to-image',
+    deliverables: ['visual observations', 'camera/composition estimate', 'palette/light notes', 'continuity anchors', 'prompt reconstruction hints'],
+    promptInstruction: 'Analyze the supplied reference without inventing hidden facts. Separate observations from estimates and recommendations, and mark uncertainty when camera/lens/light cannot be known from pixels alone.',
+    acceptance: ['observations separated from inference', 'uncertainty visible', 'reference roles preserved', 'useful continuity anchors'],
+    textPolicy: 'none',
     alpha: false,
   },
 ];
