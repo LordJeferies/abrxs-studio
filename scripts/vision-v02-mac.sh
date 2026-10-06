@@ -7,15 +7,16 @@ cd "$ROOT"
 git fetch origin --prune
 git checkout main
 if [ -n "$(git status --porcelain)" ]; then
-  echo "ERROR: local changes detected. Commit or stash them before running this release helper."
+  echo "ERROR: local changes detected. Run the sync commands provided before this helper."
   git status --short
   exit 1
 fi
 git pull --ff-only origin main
 
-npm install
+npm install --package-lock=false
 npm run vision:typecheck
 npm run vision:smoke
+npm run vision:mcp:smoke
 npm run vision:build
 npm run vision:desktop:check
 npm run vision:desktop:build
@@ -33,12 +34,25 @@ if [ -n "$APP" ]; then
 fi
 
 if command -v gh >/dev/null 2>&1; then
+  if ! gh api repos/LordJeferies/abrxs-studio/pages >/dev/null 2>&1; then
+    echo "Enabling GitHub Pages for Actions deployments..."
+    gh api -X POST repos/LordJeferies/abrxs-studio/pages -f build_type=workflow >/dev/null
+  fi
+
   gh workflow run vision-pages.yml --repo LordJeferies/abrxs-studio
-  echo "GitHub Pages workflow requested."
+  sleep 4
+  RUN_ID="$(gh run list --repo LordJeferies/abrxs-studio --workflow vision-pages.yml --event workflow_dispatch --limit 1 --json databaseId --jq '.[0].databaseId' 2>/dev/null || true)"
+  if [ -n "$RUN_ID" ] && [ "$RUN_ID" != "null" ]; then
+    gh run watch "$RUN_ID" --repo LordJeferies/abrxs-studio --exit-status
+  else
+    echo "Pages workflow requested; open Actions if you want to inspect its status."
+  fi
 else
-  echo "GitHub CLI not found; push-triggered Pages deployment may already be running."
+  echo "GitHub CLI not found. Install/authenticate gh to enable and publish Pages from this helper."
 fi
 
+echo ""
+echo "Vision validation complete."
 echo "Repo:  https://github.com/LordJeferies/abrxs-studio"
 echo "PWA:   https://lordjeferies.github.io/abrxs-studio/vision/"
 echo "Guide: https://lordjeferies.github.io/abrxs-studio/vision/guide.html"
