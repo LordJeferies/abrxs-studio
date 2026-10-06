@@ -1,4 +1,4 @@
-const CACHE = 'abrxs-vision-v0-3';
+const CACHE = 'abrxs-vision-v0-4';
 const SHELL = ['./', './manifest.webmanifest', './icon.svg', './guide.html'];
 
 self.addEventListener('install', (event) => {

@@ -1,6 +1,6 @@
 # Abrxs Vision Art Creator
 
-Abrxs Vision Art Creator is the standalone visual-direction workspace inside Abrxs Studio. It is Desktop-first, PWA-capable and offline-first for its local core.
+Abrxs Vision Art Creator is the visual-direction and model-aware generation workspace inside Abrxs Studio. It is Desktop-first, PWA-capable and offline-first for its canonical planning/prompt core.
 
 ## Public links
 
@@ -8,146 +8,174 @@ Abrxs Vision Art Creator is the standalone visual-direction workspace inside Abr
 - Vision PWA: https://lordjeferies.github.io/abrxs-studio/vision/
 - How to use: https://lordjeferies.github.io/abrxs-studio/vision/guide.html
 - Prompt quality standard: `apps/vision/docs/PROMPT_QUALITY_STANDARD_V03.md`
+- Skill/provenance map: `apps/vision/docs/SKILL_PROVENANCE_V04.md`
 
-## V0.3 prompt compiler
+## V0.4: Visual Generation Skill Engine
 
-Vision no longer treats a high-quality prompt as a long adjective list. The local compiler now produces an autonomous production specification.
+V0.4 separates three concerns that must not be confused:
 
-A hero-frame prompt explicitly carries:
+1. **Canonical production truth** — ABRAXAS visual specification: function, subject/action, scene, camera, composition, light, materials, brand, continuity, evidence, output and negatives.
+2. **Target grammar** — a deterministic translator reshapes the canonical spec for a specific image/video lane instead of sending the same universal paragraph to every model.
+3. **Provider execution** — credentials, live model discovery, capability validation, jobs and spend happen only in provider adapters. A prompt compiler never silently spends credits.
 
-- role and visual function
-- subject + action
-- scene/environment
-- composition/framing
-- camera/lens/focal/aperture
-- motivated light
-- materials and texture behavior
-- palette and brand DNA
-- typography/text-safe zones
-- continuity constraints
-- evidence constraints
-- output/canvas
-- negative constraints
+Current target profiles:
 
-Motion prompts additionally constrain camera path, temporal action, identity, geometry, material physics, light direction and object continuity.
+- `generic-production`
+- `higgsfield-cinema`
+- `higgsfield-seedance`
+- `higgsfield-kling`
+- `veo`
+- `comfyui`
+- `nvidia`
+- `gemini`
 
-`compilePrompt()` now returns:
+The provider catalog is deliberately dynamic. Higgsfield/NVIDIA/Gemini capabilities must be resolved live before enabling cloud generation. Model names, pricing, duration and supported inputs are not treated as permanent hard-coded facts.
 
-- `imagePrompt`
-- `motionPrompt`
-- `negativePrompt`
-- `productionSpec`
-- `quality` audit with score/grade/checks/warnings
+## Rules derived from the external skill/repository audit
 
-The local `auditPrompt()` completeness gate helps detect underspecified ideas before generation. A high score means the production decisions are explicit; it does not replace human judgment about whether the idea itself is strong.
+The implementation in `src/skillEngine.ts` now encodes the useful parts of the repositories supplied during design:
 
-## Vision DNA presets
+- MCSLA-style model/workspace + camera + subject + look + action structure for Higgsfield-oriented prompts.
+- Image-to-video describes **motion/change from the supplied first frame**, not a decorative re-description of the image.
+- Camera movement is constrained; competing moves should be sequenced or split rather than stacked blindly.
+- Every reference has a semantic role: `identity`, `look`, `composition`, `wardrobe`, `location`, `motion`, `product`, `logo`, `palette`, `text-layout`, `first-frame`, `last-frame`.
+- Storyboards carry identity/location/light/palette/geometry continuity into every shot package.
+- Short-form video uses explicit temporal beats and audio intent instead of one undifferentiated paragraph.
+- Exact text inside generated imagery is treated as risky; use a separate text layer when wording must be exact.
+- Video/keyframe review should happen before expensive generation when identity or composition is critical.
+- Keep a successful take and change the diagnosed failure rather than randomly rewriting all successful decisions.
+- Browser automation is fallback-only when an official CLI/SDK/API exists.
 
-Current offline presets include:
+See `docs/SKILL_PROVENANCE_V04.md` for source/license boundaries. Non-commercial reference projects are concept-only; their source is not copied into Abrxs.
 
-- `clean-editorial`
-- `cinematic-education`
-- `luxury-documentary`
-- `joc-editorial`
+## Quality gates
 
-`joc-editorial` carries JOC-specific palette, editorial photography, typography behavior, continuity and anti-genericity rules. It is intentionally a brand preset rather than a universal default.
+The provider-aware compiler audits:
+
+- canonical production completeness
+- camera feasibility
+- temporal coverage/coherence
+- identity/location/light/palette continuity
+- reference-role semantics
+- image-to-video first-frame contract
+- target prompt budget / overprompting
+- physical plausibility and anti-mutation constraints
+- evidence integrity
+- explicit visual purpose
+
+A high score means the **production specification is explicit and compatible**, not that an aesthetic result is guaranteed.
+
+## Reference + continuity system
+
+Uploaded references are no longer anonymous files. In the UI each reference can be assigned a role. The generated continuity pack carries stable identity, wardrobe, location, light direction, palette and geometry across a storyboard or take family.
+
+This is the base for future `New Take` and `New Scene` operations:
+
+- **New Take**: preserve identity/location/wardrobe/time, change camera/framing/action within the same beat.
+- **New Scene**: preserve character/brand DNA while explicitly changing location/action/light and creating a new continuity key.
+
+## Storyboard V0.4
+
+Storyboard no longer emits a generic comma-separated shot prompt. Every shot is compiled through the same provider-aware skill engine used by Quick.
+
+The UI can choose a prompt target for storyboard shots and displays the resulting QA score. The board also publishes a continuity contract so adjacent shots preserve screen direction, identity, wardrobe, hero props and environmental logic.
+
+## Providers and execution
+
+### Prompt Only
+Ready and fully local.
+
+### Higgsfield
+The adapter is built around the **official Higgsfield CLI/SDK execution surface**. The local CLI can:
+
+```bash
+npm run vision:cli -- models
+```
+
+which invokes live model discovery through:
+
+```bash
+higgsfield model list --json
+```
+
+Generation is intentionally blocked unless you select a live model and explicitly accept provider spend:
+
+```bash
+npm run vision:cli -- run \
+  --target higgsfield-seedance \
+  --mode text-to-video \
+  --intent cinematic \
+  --idea "A founder commits to the decision" \
+  --model <LIVE_MODEL_ID> \
+  --confirm-spend
+```
+
+No provider credential is committed to the repository.
+
+### NVIDIA / Gemini
+Capability adapters are prepared, but generation remains disabled until credentials, exact model capability and request schema are validated against the connected account. The UI must not advertise unsupported/free/unlimited generation.
+
+### ComfyUI
+Prepared as a local workflow target. Actual execution requires inspection of the selected workflow JSON and installed node/model inventory.
+
+## UI
+
+V0.4 adds a visible **Visual Generation Skill Engine** to Quick:
+
+- target
+- mode
+- intent
+- duration
+- route recommendation
+- translated target prompt
+- QA score/gates
+- warnings
+- provenance indicators
+
+Settings now separates:
+
+- platform language: English / Español
+- prompt output language: AUTO / EN / ES
+
+Reference rows expose their semantic role. Provider rows show execution/discovery policy instead of pretending prepared integrations are already operational.
 
 ## What works offline
 
 - Quick Creator
-- deterministic production-spec Prompt Director
-- Prompt Quality Audit
+- canonical production-spec Prompt Director
+- provider/model-target prompt compilation
+- Prompt Quality Audit and provider compatibility gates
+- route recommendation
 - Director Lock
-- Vision DNA presets
-- Carousel Studio prompt generation
-- Storyboard Studio and cinema grammars
-- local image analysis (dimensions, aspect, orientation, luminance, approximate dominant colors)
-- local video metadata analysis and suggested sample times
+- Vision DNA presets including JOC
+- Carousel prompt generation
+- Storyboard + per-shot target compilation
+- local image/video metadata analysis
 - IndexedDB project persistence
 - JSON import/export
 - Prompt Pack export
-- English/Spanish UI preference
+- English/Spanish UI
 
-The offline core is intentionally useful without any provider key.
+Cloud generation itself is not offline.
 
-## Current cloud/provider status
-
-- Prompt Only: ready
-- NVIDIA NIM: provider target for multimodal analysis and supported generation; integration is the next provider milestone
-- Gemini: optional target for semantic reference/story analysis; pricing/capabilities are model-dependent
-- Higgsfield: prepared target
-- ComfyUI: prepared local-workflow target
-
-Keys must never be committed to this public repository. Desktop provider credentials will live behind native secure storage. Web/PWA BYOK, when enabled, is device-local and should not be treated as a hidden server secret.
-
-## Main workspaces
-
-### Quick
-Write one visual idea and get a production-spec Hero Frame Prompt plus Motion Prompt. Camera, light, aspect and Vision DNA remain structured decisions rather than prompt fragments.
-
-### Director
-Set camera, lens, focal length, aperture, framing, angle, movement, lighting, palette, atmosphere and style. Director Lock marks decisions that future AI enhancement must preserve. Beginner visual references explain focal length, shot size and movement without requiring cinema knowledge.
-
-### Carousel
-Paste title/body blocks separated by blank lines. Choose:
-
-- Text in image
-- Text layer
-- Clean image
-
-Every slide is assigned a narrative role and receives an autonomous visual specification with direction, continuity and negative constraints. Vision treats the carousel as a sequence, not a transcript split into cards.
-
-### Storyboard
-Choose a cinema grammar, number of scenes and shots per scene. The local engine generates narrative role, framing, focal length, angle, movement, duration and transition intent for each shot.
-
-Included grammars:
-
-- Classical Coverage
-- Suspense Reveal
-- Dialogue Coverage
-- Emotional Isolation
-- Observational Documentary
-- Rhythmic Montage
-- Product Hero
-- Social Cinematic Hook
-
-### Analyze
-Local-first media inspection. Images are analyzed in-browser; video metadata stays local. Semantic analysis is intentionally separate and will use a configured provider when needed.
-
-### Layers
-Defines the intended layer package for future XRoll/Dresser workflows: background, midground, subject, foreground, text/graphics and depth/masks.
-
-### Vision Space
-V0.3 still exposes a limited local Prompt Director flow. It is the foundation for the later node/workflow runtime; it is not yet a full Magnific/ComfyUI-class graph executor.
-
-### Settings
-The platform UI can be switched between English and Spanish. The preference persists locally and works offline. Prompt output language is supported by the core/CLI as `auto`, `en` or `es`; the dedicated UI control is being separated from platform language so changing menus never silently rewrites creative source text.
-
-## Project persistence
-
-Vision mirrors current work into IndexedDB and supports portable JSON export/import using schema:
-
-`abrxs.vision-project.v2`
-
-The portable file is designed for future Brand, Ficha, Geometra and Dresser handoffs.
-
-## Terminal / CLI
-
-From the repository root:
+## CLI
 
 ```bash
 npm install
 npm run vision:cli -- status
-npm run vision:cli -- prompt --idea "Joc makes a decision criterion visible" --subject "Joc at a real worktable" --function "show criterion over task listing" --preset joc-editorial --lang en
+npm run vision:cli -- prompt --idea "Joc makes a decision criterion visible" --preset joc-editorial --lang en
 npm run vision:cli -- audit --idea "premium cinematic professional"
-npm run vision:cli -- carousel --title "The client does not buy tasks" --body "They need a criterion to decide" --role HOOK --preset joc-editorial
-npm run vision:cli -- storyboard --idea "A client hesitates before signing" --grammar suspense --scenes 2 --shots 4
+npm run vision:cli -- skill --idea "A client hesitates before signing" --target higgsfield-seedance --mode text-to-video --intent cinematic --duration 8
+npm run vision:cli -- skill --idea "Animate this approved shot" --target higgsfield-seedance --mode image-to-video --ref first-frame:shot.png --start-image
+npm run vision:cli -- route --mode text-to-video --intent social-hook --multi-shot
+npm run vision:cli -- storyboard --idea "A client hesitates before signing" --grammar suspense --target higgsfield-seedance
+npm run vision:cli -- providers
 npm run vision:smoke
 ```
 
 ## MCP
 
-Run the stdio MCP server with:
+Run:
 
 ```bash
 npm run vision:mcp
@@ -156,17 +184,20 @@ npm run vision:mcp
 Current MCP tools:
 
 - `vision.get_status`
+- `vision.get_provider_registry`
 - `vision.compile_prompt_pair`
 - `vision.audit_prompt`
+- `vision.compile_provider_prompt`
+- `vision.recommend_generation_route`
 - `vision.compile_carousel_prompt`
 - `vision.create_storyboard`
+- `vision.compile_storyboard_shot`
 
-The MCP and CLI call the same prompt/storyboard domain functions used by the app instead of automating UI clicks.
+MCP compiles/plans but does **not** execute paid cloud generation in V0.4.
 
-## Development
+## Validation
 
 ```bash
-npm run vision:dev
 npm run vision:typecheck
 npm run vision:smoke
 npm run vision:mcp:smoke
@@ -175,7 +206,7 @@ npm run vision:desktop:check
 npm run vision:desktop:build
 ```
 
-## macOS validation + install + Pages trigger
+macOS helper:
 
 ```bash
 cd "$HOME/Downloads/abrxs-studio"
@@ -184,12 +215,6 @@ git pull --ff-only origin main
 bash scripts/vision-v02-mac.sh
 ```
 
-Do not `chmod` the helper manually. The helper validates Vision, builds the macOS app, installs it in `~/Applications` when the bundle exists, creates a local ZIP and triggers the GitHub Pages workflow if `gh` is installed.
+## Current boundary
 
-## iPhone / PWA
-
-Open the public Vision URL in Safari, then use Share → Add to Home Screen. The installed web app uses the same local Prompt/Carousel/Storyboard core and IndexedDB project store. Dense desktop panes adapt to mobile; the PWA does not attempt to compress the full desktop layout into phone width.
-
-## Current V0.3 boundary
-
-V0.3 substantially raises the offline prompt/QA layer and exposes it through CLI/MCP. Provider-backed generation, semantic reference analysis, actual layer separation/upscale/relight and a full node graph executor remain subsequent milestones. The UI must not claim those operations are complete until their provider/service implementation passes its own tests.
+V0.4 is a real provider-aware **planning and prompt-translation layer** plus an official Higgsfield CLI execution adapter. It does not claim that NVIDIA, Gemini, ComfyUI layer separation, relight/upscale, or every Higgsfield workspace is already wired end-to-end. Those actions stay disabled until their provider adapter, job lifecycle, credential handling and tests are complete.

@@ -6,7 +6,19 @@ import {
   defaults,
   type OutputLanguage,
 } from '../src/promptEngine';
-import { generateStoryboard, storyboardGrammars, type StoryboardGrammarId } from '../src/storyboard';
+import { buildProviderExecutionPlan, providerRegistry, providerForTarget } from '../src/providerRegistry';
+import {
+  compileSkillPrompt,
+  generationIntents,
+  recommendGenerationRoute,
+  targetProfiles,
+  type GenerationIntent,
+  type GenerationMode,
+  type GenerationTargetId,
+  type VisualReference,
+} from '../src/skillEngine';
+import { compileShotPackage, generateStoryboard, storyboardGrammars, type StoryboardGrammarId } from '../src/storyboard';
+import { higgsfieldCliStatus, listHiggsfieldModels, runHiggsfieldGeneration } from './providerCli';
 
 const args = process.argv.slice(2);
 const command = args[0] ?? 'help';
@@ -16,6 +28,18 @@ function value(flag: string, fallback = '') {
   return index >= 0 && args[index + 1] ? args[index + 1] : fallback;
 }
 
+function values(flag: string) {
+  const found: string[] = [];
+  for (let index = 0; index < args.length - 1; index += 1) {
+    if (args[index] === flag && args[index + 1]) found.push(args[index + 1]);
+  }
+  return found;
+}
+
+function flag(name: string) {
+  return args.includes(name);
+}
+
 function print(valueToPrint: unknown) {
   process.stdout.write(`${typeof valueToPrint === 'string' ? valueToPrint : JSON.stringify(valueToPrint, null, 2)}\n`);
 }
@@ -23,6 +47,22 @@ function print(valueToPrint: unknown) {
 function language(): OutputLanguage {
   const candidate = value('--lang', 'auto');
   return candidate === 'en' || candidate === 'es' ? candidate : 'auto';
+}
+
+function mode(): GenerationMode {
+  const candidate = value('--mode', 'text-to-video') as GenerationMode;
+  const allowed: GenerationMode[] = ['text-to-image', 'image-to-image', 'text-to-video', 'image-to-video', 'video-edit'];
+  return allowed.includes(candidate) ? candidate : 'text-to-video';
+}
+
+function target(): GenerationTargetId {
+  const candidate = value('--target', 'higgsfield-seedance') as GenerationTargetId;
+  return targetProfiles.some((profile) => profile.id === candidate) ? candidate : 'higgsfield-seedance';
+}
+
+function intent(): GenerationIntent {
+  const candidate = value('--intent', 'cinematic') as GenerationIntent;
+  return generationIntents.includes(candidate) ? candidate : 'cinematic';
 }
 
 function promptState() {
@@ -46,19 +86,49 @@ function promptState() {
     aspect: value('--aspect', defaults.aspect),
     brandPreset: value('--preset', defaults.brandPreset),
     visualFunction: value('--function', defaults.visualFunction),
+    materialTexture: value('--materials', defaults.materialTexture),
+    textZones: value('--text-zones', defaults.textZones),
+    continuity: value('--continuity', defaults.continuity),
+    evidenceConstraints: value('--evidence', defaults.evidenceConstraints),
     outputLanguage: language(),
   };
+}
+
+function parsedReferences(): VisualReference[] {
+  return values('--ref').map((raw) => {
+    const separator = raw.indexOf(':');
+    if (separator < 1) return { role: 'look', name: raw };
+    return { role: raw.slice(0, separator), name: raw.slice(separator + 1) };
+  });
+}
+
+function skillCompilation() {
+  const references = parsedReferences();
+  const startImageProvided = flag('--start-image') || references.some((reference) => String(reference.role).toLowerCase() === 'first-frame');
+  return compileSkillPrompt({
+    director: promptState(),
+    target: target(),
+    mode: mode(),
+    intent: intent(),
+    duration: Number(value('--duration', '8')) || 8,
+    references,
+    startImageProvided,
+    literalText: value('--literal-text', ''),
+    audioDirection: value('--audio', ''),
+    modelHint: value('--model-hint', ''),
+  });
 }
 
 if (command === 'status') {
   print({
     name: 'Abrxs Vision Art Creator',
-    version: '0.3.0',
+    version: '0.4.0',
     localCore: true,
-    promptStandard: 'ABRAXAS production-spec v0.3',
-    offline: ['prompt', 'prompt-audit', 'carousel', 'storyboard', 'project-store', 'basic-image-analysis', 'basic-video-metadata'],
-    presets: brandPresets.map((preset) => preset.id),
-    providers: { promptOnly: 'ready', nvidia: 'adapter-next', gemini: 'adapter-next', higgsfield: 'prepared', comfyui: 'prepared' },
+    promptStandard: 'ABRAXAS production-spec + provider skill engine v0.4',
+    offline: ['prompt', 'prompt-audit', 'provider-prompt-compile', 'route-recommendation', 'carousel', 'storyboard', 'project-store', 'basic-image-analysis', 'basic-video-metadata'],
+    targets: targetProfiles.map((profile) => profile.id),
+    providers: providerRegistry.map((provider) => ({ id: provider.id, readiness: provider.readiness })),
+    higgsfieldCli: higgsfieldCliStatus(),
   });
   process.exit(0);
 }
@@ -73,12 +143,64 @@ if (command === 'audit') {
   process.exit(0);
 }
 
+if (command === 'skill' || command === 'provider-prompt') {
+  const compilation = skillCompilation();
+  print({ ...compilation, executionPlan: buildProviderExecutionPlan(compilation, value('--model', '') || undefined) });
+  process.exit(0);
+}
+
+if (command === 'route') {
+  print(recommendGenerationRoute({
+    mode: mode(),
+    intent: intent(),
+    localOnly: flag('--local-only'),
+    identityCritical: flag('--identity-critical'),
+    nativeAudio: flag('--native-audio'),
+    videoEdit: flag('--video-edit') || mode() === 'video-edit',
+    longTake: flag('--long-take'),
+    multiShot: flag('--multi-shot'),
+    costSensitive: flag('--cost-sensitive'),
+  }));
+  process.exit(0);
+}
+
+if (command === 'providers') {
+  print({ providers: providerRegistry, targets: targetProfiles });
+  process.exit(0);
+}
+
+if (command === 'models') {
+  print(listHiggsfieldModels());
+  process.exit(0);
+}
+
+if (command === 'run') {
+  const compilation = skillCompilation();
+  const provider = providerForTarget(compilation.target.id);
+  if (provider.id !== 'higgsfield') {
+    print({ ok: false, blocked: true, reason: `Target ${compilation.target.id} is not executable through the Higgsfield CLI adapter.` });
+    process.exit(2);
+  }
+  const modelId = value('--model', '');
+  if (!modelId) {
+    print({ ok: false, blocked: true, reason: 'Choose a live Higgsfield model id first with `npm run vision:cli -- models`, then pass --model <id>.' });
+    process.exit(2);
+  }
+  print(runHiggsfieldGeneration({
+    modelId,
+    prompt: compilation.providerPrompt,
+    confirmSpend: flag('--confirm-spend'),
+    aspectRatio: value('--aspect', defaults.aspect),
+  }));
+  process.exit(0);
+}
+
 if (command === 'carousel') {
   const title = value('--title', 'A clear decision needs a visible criterion');
   const body = value('--body', 'Show the mechanism, not a decorative summary.');
   const role = value('--role', 'HOOK').toUpperCase() as 'HOOK' | 'CONTEXT' | 'PROGRESSION' | 'MECHANISM' | 'PAYOFF';
-  const mode = value('--text-mode', 'separate');
-  const textMode = mode === 'integrated' || mode === 'clean' ? mode : 'separate';
+  const rawMode = value('--text-mode', 'separate');
+  const textMode = rawMode === 'integrated' || rawMode === 'clean' ? rawMode : 'separate';
   print(compileCarouselPromptSpec(
     { number: Number(value('--number', '1')) || 1, title, body, narrativeRole: role },
     value('--style', 'premium editorial visual system'),
@@ -94,7 +216,13 @@ if (command === 'storyboard') {
   const grammar = value('--grammar', 'classical') as StoryboardGrammarId;
   const scenes = Number(value('--scenes', '2'));
   const shots = Number(value('--shots', '4'));
-  print(generateStoryboard(idea, grammar, scenes, shots, { ...defaults, outputLanguage: language() }));
+  const board = generateStoryboard(idea, grammar, scenes, shots, { ...promptState(), idea });
+  const targetId = target();
+  print({
+    ...board,
+    promptTarget: targetId,
+    shotPackages: board.shots.map((shot) => ({ id: shot.id, package: compileShotPackage(shot, promptState(), idea, targetId) })),
+  });
   process.exit(0);
 }
 
@@ -116,12 +244,21 @@ if (command === 'smoke') {
   });
   const carousel = compileCarouselPromptSpec(
     { number: 1, title: 'The client does not buy tasks', body: 'They need a criterion to decide.', narrativeRole: 'HOOK' },
-    'editorial conceptual photography',
-    'separate',
-    'joc-editorial',
-    '4:5',
+    'editorial conceptual photography', 'separate', 'joc-editorial', '4:5',
   );
   const board = generateStoryboard('A founder makes a difficult decision.', 'suspense', 2, 4, defaults);
+  const firstFrame: VisualReference = { role: 'first-frame', name: 'approved-shot-01.png' };
+  const seedance = compileSkillPrompt({
+    director: { ...defaults, idea: 'A founder commits to a difficult decision.', action: 'looks at the final criterion, then signs once' },
+    mode: 'image-to-video', target: 'higgsfield-seedance', intent: 'cinematic', duration: 8, references: [firstFrame], startImageProvided: true,
+  });
+  const cinema = compileSkillPrompt({
+    director: { ...defaults, idea: 'Joc explains a decision criterion using one physical card.', brandPreset: 'joc-editorial' },
+    mode: 'text-to-image', target: 'higgsfield-cinema', intent: 'education', references: [],
+  });
+  const routeResult = recommendGenerationRoute({ mode: 'text-to-video', intent: 'social-hook', multiShot: true });
+  const executionPlan = buildProviderExecutionPlan(seedance);
+  const shotPackage = compileShotPackage(board.shots[0], defaults, board.title, 'higgsfield-seedance');
   const failures: string[] = [];
 
   if (!prompt.imagePrompt.toLowerCase().includes('founder')) failures.push('prompt did not preserve idea/subject');
@@ -133,25 +270,29 @@ if (command === 'smoke') {
   if (!jocPrompt.imagePrompt.includes('deep wine')) failures.push('JOC preset did not propagate visual DNA');
   if (!carousel.imagePrompt.includes('NEGATIVE CONSTRAINTS:')) failures.push('carousel prompt missing negative constraints');
   if (!carousel.visualDirection || !carousel.continuityNote) failures.push('carousel spec missing visual direction or continuity');
-  if (board.shots.length !== 8) failures.push('storyboard shot count mismatch');
+  if (board.shots.length !== 8 || board.continuityContract.length < 5) failures.push('storyboard continuity/count mismatch');
+  if (!seedance.providerPrompt.includes('MOTION DELTA ONLY')) failures.push('Seedance I2V did not switch to motion-delta grammar');
+  if (!seedance.timeline.length || seedance.timeline[0].start !== 0) failures.push('Seedance temporal plan missing');
+  if (seedance.quality.score < 90) failures.push(`provider skill quality too low: ${seedance.quality.score}`);
+  if (cinema.providerPrompt.length > 512) failures.push('Cinema Studio prompt exceeds 512-char target');
+  if (routeResult.primary !== 'higgsfield-seedance') failures.push('social/multishot route did not select Seedance lane');
+  if (executionPlan.executableNow) failures.push('paid provider execution must remain blocked without explicit model selection');
+  if (!shotPackage.providerPrompt || shotPackage.quality.score < 80) failures.push('storyboard shot package not production-ready');
+  if (!providerRegistry.some((provider) => provider.id === 'higgsfield')) failures.push('Higgsfield provider registry missing');
   if (!brandPresets.some((preset) => preset.id === 'joc-editorial')) failures.push('JOC visual preset missing');
   if (!storyboardGrammars.length) failures.push('storyboard grammars missing');
 
-  if (failures.length) {
-    print({ ok: false, failures });
-    process.exit(1);
-  }
-
+  if (failures.length) { print({ ok: false, failures }); process.exit(1); }
   print({
     ok: true,
-    tests: 12,
-    promptQuality: prompt.quality,
-    imagePromptChars: prompt.imagePrompt.length,
-    productionSpecChars: prompt.productionSpec.length,
-    carouselPromptChars: carousel.imagePrompt.length,
+    tests: 20,
+    promptQuality: prompt.quality.score,
+    providerSkillQuality: seedance.quality.score,
+    cinemaPromptChars: cinema.providerPrompt.length,
     storyboardShots: board.shots.length,
+    providerCount: providerRegistry.length,
   });
   process.exit(0);
 }
 
-print(`Abrxs Vision CLI v0.3\n\nCommands:\n  status\n  prompt --idea "..." [--subject "..."] [--function "..."] [--camera "35mm film"] [--focal "50mm"] [--preset joc-editorial] [--lang auto|en|es]\n  audit --idea "..." [same prompt options]\n  carousel --title "..." --body "..." [--role HOOK|CONTEXT|PROGRESSION|MECHANISM|PAYOFF] [--text-mode integrated|separate|clean] [--preset joc-editorial]\n  storyboard --idea "..." [--grammar suspense] [--scenes 2] [--shots 4] [--lang auto|en|es]\n  smoke`);
+print(`Abrxs Vision CLI v0.4\n\nCommands:\n  status\n  prompt --idea "..." [--preset joc-editorial] [--lang auto|en|es]\n  audit --idea "..."\n  skill --idea "..." --target higgsfield-seedance --mode text-to-video --intent cinematic --duration 8 [--ref first-frame:path.png]\n  route --mode text-to-video --intent social-hook [--identity-critical] [--native-audio] [--local-only]\n  providers\n  models                         # live Higgsfield model discovery via official CLI\n  run --model <live-model-id> ... --confirm-spend\n  carousel --title "..." --body "..." [--role HOOK] [--preset joc-editorial]\n  storyboard --idea "..." --grammar suspense --target higgsfield-seedance\n  smoke\n\nReference syntax: repeat --ref role:name-or-path. Roles include identity, look, composition, wardrobe, location, motion, product, logo, palette, text-layout, first-frame and last-frame.\n`);
