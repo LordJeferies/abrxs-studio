@@ -1,6 +1,6 @@
 {
   "name": "abrxs-studio",
-  "version": "0.1.0-foundation",
+  "version": "0.2.0-vision",
   "private": true,
   "workspaces": [
     "apps/*",
@@ -18,6 +18,10 @@
     "vision:dev": "npm run dev -w @abrxs/vision",
     "vision:typecheck": "npm run typecheck -w @abrxs/vision",
     "vision:build": "npm run build -w @abrxs/vision",
+    "vision:build:pages": "npm run build:pages -w @abrxs/vision",
+    "vision:cli": "npm run cli -w @abrxs/vision --",
+    "vision:smoke": "npm run smoke -w @abrxs/vision",
+    "vision:mcp": "npm run mcp -w @abrxs/vision",
     "vision:desktop:dev": "npm run desktop:dev -w @abrxs/vision",
     "vision:desktop:check": "npm run desktop:check -w @abrxs/vision",
     "vision:desktop:build": "npm run desktop:build -w @abrxs/vision",
