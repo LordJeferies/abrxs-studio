@@ -5,11 +5,28 @@ import { outputProfiles } from '../src/outputProfiles';
 import { defaults } from '../src/promptEngine';
 import { compileProfessionalPrompt, professionalBriefDefaults, professionalTargetProfiles } from '../src/professionalPromptEngine';
 
-const server = new McpServer({ name: 'abrxs-vision-professional', version: '0.6.0' });
+const server = new McpServer({ name: 'abrxs-vision-professional', version: '0.6.1' });
 const target = z.enum(['generic-production','higgsfield-cinema','higgsfield-seedance','higgsfield-kling','veo','comfyui','nvidia','gemini']);
 const mode = z.enum(['text-to-image','image-to-image','text-to-video','image-to-video','video-edit']);
 const intent = z.enum(['cinematic','social-hook','podcast-visual','product','education','documentary','dialogue','faceless','carousel']);
 const outputType = z.enum(['hero-image','storyboard-frame','carousel-slide','xroll-still','cinematic-shot','xroll-video','product-hero','clean-plate','transparent-layer','social-vertical-video','reference-analysis']);
+
+type ProfessionalTarget = z.infer<typeof target>;
+
+function enforceProviderBoundaryPolicy<T extends { targetPrompt: string }>(packet: T, targetId: ProfessionalTarget): T {
+  if (targetId !== 'higgsfield-seedance') return packet;
+
+  const targetPrompt = packet.targetPrompt
+    .split('\n')
+    .map((line) => {
+      if (!/^\s*NEGATIVE\s*:/i.test(line)) return line;
+      const exclusions = line.replace(/^\s*NEGATIVE\s*:\s*/i, '').trim();
+      return `STABILITY REQUIREMENTS: preserve identity, anatomy, object topology, wardrobe, location continuity and camera-path coherence. Exclusion intent for human/provider QA only: ${exclusions}`;
+    })
+    .join('\n');
+
+  return { ...packet, targetPrompt };
+}
 
 server.registerTool('vision.pro.targets', {
   description: 'Return professional target policies, including prompt regime and how No Prompt/exclusion intent is mapped for each target.', inputSchema: {},
@@ -32,7 +49,7 @@ server.registerTool('vision.pro.compile', {
     objective: z.string().optional(), mustHave: z.string().optional(), doNotWant: z.string().optional(), outputType: outputType.default('cinematic-shot'), outputRequirements: z.string().optional(), literalText: z.string().optional(), performance: z.string().optional(), physicsNotes: z.string().optional(), motionIntent: z.string().optional(), audioIntent: z.string().optional(), referenceInstructions: z.string().optional(), continuityPriority: z.string().optional(), startImageProvided: z.boolean().default(false),
   },
 }, async (input) => {
-  const packet = compileProfessionalPrompt({
+  const packet = enforceProviderBoundaryPolicy(compileProfessionalPrompt({
     director: {
       ...defaults,
       idea: input.idea,
@@ -66,7 +83,7 @@ server.registerTool('vision.pro.compile', {
       referenceInstructions: input.referenceInstructions ?? professionalBriefDefaults.referenceInstructions,
       continuityPriority: input.continuityPriority ?? professionalBriefDefaults.continuityPriority,
     },
-  });
+  }), input.target);
   return { content: [{ type: 'text', text: JSON.stringify(packet, null, 2) }] };
 });
 
