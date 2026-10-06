@@ -7,6 +7,7 @@ import './v03.css';
 import './v04.css';
 import './v05.css';
 import './v06.css';
+import './v07.css';
 import { VisionI18nProvider } from './i18n';
 import { ProfessionalPromptLab } from './ProfessionalPromptLab';
 import { registerVisionPwa } from './pwa';
