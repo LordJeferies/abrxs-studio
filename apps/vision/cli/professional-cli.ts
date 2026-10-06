@@ -1,9 +1,9 @@
+import { outputProfiles, type PromptOutputProfileId } from '../src/outputProfiles';
 import { defaults, type DirectorState } from '../src/promptEngine';
 import {
   compileProfessionalPrompt,
   professionalBriefDefaults,
   professionalTargetProfiles,
-  type OutputType,
   type ProfessionalPromptBrief,
 } from '../src/professionalPromptEngine';
 import { generationIntents, targetProfiles, type GenerationIntent, type GenerationMode, type GenerationTargetId } from '../src/skillEngine';
@@ -36,6 +36,15 @@ function intent(): GenerationIntent {
   return generationIntents.includes(candidate) ? candidate : 'cinematic';
 }
 
+function outputType(): PromptOutputProfileId {
+  const raw = value('--output-type', professionalBriefDefaults.outputType);
+  const legacy: Record<string, PromptOutputProfileId> = {
+    'cinematic-video': 'cinematic-shot', xroll: 'xroll-video', 'carousel-frame': 'carousel-slide', 'product-shot': 'product-hero',
+  };
+  const normalized = legacy[raw] ?? raw;
+  return outputProfiles.some((profile) => profile.id === normalized) ? normalized as PromptOutputProfileId : 'hero-image';
+}
+
 function director(): DirectorState {
   return {
     ...defaults,
@@ -55,15 +64,16 @@ function director(): DirectorState {
 }
 
 function brief(): ProfessionalPromptBrief {
-  const outputType = value('--output-type', professionalBriefDefaults.outputType) as OutputType;
   return {
     ...professionalBriefDefaults,
     objective: value('--objective', professionalBriefDefaults.objective),
     mustHave: value('--must-have', professionalBriefDefaults.mustHave),
     doNotWant: value('--do-not', professionalBriefDefaults.doNotWant),
-    outputType,
+    outputType: outputType(),
     outputRequirements: value('--output', professionalBriefDefaults.outputRequirements),
     literalText: value('--literal-text', ''),
+    performance: value('--performance', professionalBriefDefaults.performance),
+    physicsNotes: value('--physics', professionalBriefDefaults.physicsNotes),
     motionIntent: value('--motion', professionalBriefDefaults.motionIntent),
     audioIntent: value('--audio', professionalBriefDefaults.audioIntent),
     referenceInstructions: value('--references', professionalBriefDefaults.referenceInstructions),
@@ -73,6 +83,11 @@ function brief(): ProfessionalPromptBrief {
 
 if (command === 'targets') {
   print(professionalTargetProfiles());
+  process.exit(0);
+}
+
+if (command === 'outputs') {
+  print(outputProfiles);
   process.exit(0);
 }
 
@@ -91,8 +106,8 @@ if (command === 'compile' || command === 'prompt') {
 
 if (command === 'audit') {
   const result = compileProfessionalPrompt({ director: director(), target: target(), mode: mode(), intent: intent(), duration: Number(value('--duration', '8')) || 8, startImageProvided: args.includes('--start-image'), brief: brief() });
-  print(result.quality);
+  print({ quality: result.quality, outputContract: result.outputContract, constraintPack: result.constraintPack, parameterPack: result.parameterPack });
   process.exit(result.quality.grade === 'D' ? 1 : 0);
 }
 
-print(`Abrxs Vision Professional Prompt CLI\n\nCommands:\n  targets\n  compile --idea "..." --target higgsfield-seedance --mode text-to-video --intent cinematic \\\n    --objective "..." --must-have "..." --do-not "..." --output-type cinematic-video --output "..."\n  audit --idea "..." [same options]\n\nCore brief fields:\n  --objective        What the visual must communicate or accomplish\n  --must-have        Required visual decisions/elements\n  --do-not           Failure modes, clichés and exclusions\n  --output-type      hero-image | storyboard-frame | cinematic-video | xroll | carousel-frame | product-shot | reference-analysis\n  --output           Delivery/output requirements\n  --literal-text     Exact text if required (model-sensitive)\n  --motion           Motion intent for video\n  --audio            Sound intent for video\n  --references       Reference-role instructions\n  --continuity       Identity/location/wardrobe/geometry continuity priorities\n`);
+print(`Abrxs Vision Professional Prompt CLI v0.6\n\nCommands:\n  targets\n  outputs\n  compile --idea "..." --target higgsfield-seedance --mode text-to-video --intent cinematic \\\n    --objective "..." --must-have "..." --do-not "..." --output-type cinematic-shot --output "..." \\\n    --performance "..." --physics "..."\n  audit --idea "..." [same options]\n\nCanonical brief fields:\n  --objective        What the visual must communicate or accomplish\n  --must-have        Required visual decisions/elements\n  --do-not           No Prompt: failure modes, clichés and exclusions\n  --output-type      ${outputProfiles.map((profile) => profile.id).join(' | ')}\n  --output           Additional delivery/output requirements\n  --literal-text     Exact text if required (model-sensitive)\n  --performance      Physical acting / micro-behavior: eyes, breath, posture, hands, face\n  --physics          Material / physical behavior requirements\n  --motion           Motion intent for video\n  --audio            Sound intent for video\n  --references       Reference-role instructions\n  --continuity       Identity/location/wardrobe/geometry continuity priorities\n\nImportant: --do-not is canonical exclusion intent. It is NOT blindly appended as negative syntax. The target policy decides whether to convert it to positive constraints, a native negative field, or workflow conditioning.\n`);
