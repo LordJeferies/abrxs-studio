@@ -4,9 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "predev": "../../scripts/ensure-desktop-assets.sh",
     "dev": "tauri dev",
+    "prebuild": "../../scripts/ensure-desktop-assets.sh",
     "build": "tauri build",
-    "check": "cargo check --manifest-path src-tauri/Cargo.toml",
+    "precheck": "../../scripts/ensure-desktop-assets.sh",
+    "check": "cargo check --locked --manifest-path src-tauri/Cargo.toml || cargo check --manifest-path src-tauri/Cargo.toml",
     "icon": "tauri icon src-tauri/icons/app-icon.svg",
     "dev:web": "npm run dev --prefix ../web",
     "build:web": "npm run build --prefix ../web"
