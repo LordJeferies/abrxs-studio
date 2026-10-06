@@ -15,6 +15,12 @@
     "desktop:build": "npm run build -w @abrxs/studio-desktop",
     "desktop:check": "npm run check -w @abrxs/studio-desktop",
     "desktop:assets": "./scripts/ensure-desktop-assets.sh",
+    "vision:dev": "npm run dev -w @abrxs/vision",
+    "vision:typecheck": "npm run typecheck -w @abrxs/vision",
+    "vision:build": "npm run build -w @abrxs/vision",
+    "vision:desktop:dev": "npm run desktop:dev -w @abrxs/vision",
+    "vision:desktop:check": "npm run desktop:check -w @abrxs/vision",
+    "vision:desktop:build": "npm run desktop:build -w @abrxs/vision",
     "typecheck": "npm run typecheck -w @abrxs/studio-web",
     "check": "npm run typecheck && npm run doctor",
     "doctor": "node scripts/doctor.mjs"
