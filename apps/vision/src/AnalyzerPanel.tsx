@@ -1,8 +1,10 @@
 import { FileVideo2, Image as ImageIcon, ScanSearch, Upload } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { analyzeMedia, type LocalMediaAnalysis } from './analyzer';
+import { useVisionI18n } from './i18n';
 
 export function AnalyzerPanel() {
+  const { t, option } = useVisionI18n();
   const inputRef = useRef<HTMLInputElement>(null);
   const [analysis, setAnalysis] = useState<LocalMediaAnalysis | null>(null);
   const [busy, setBusy] = useState(false);
@@ -15,7 +17,7 @@ export function AnalyzerPanel() {
       setAnalysis(await analyzeMedia(file));
     } catch (reason) {
       setAnalysis(null);
-      setError(reason instanceof Error ? reason.message : 'Could not analyze this file.');
+      setError(reason instanceof Error ? reason.message : t('analyzer.error'));
     } finally {
       setBusy(false);
     }
@@ -25,12 +27,12 @@ export function AnalyzerPanel() {
     <section className="analyzer-panel">
       <div className="analyzer-head">
         <div>
-          <span className="micro">LOCAL ANALYZER · OFFLINE</span>
-          <h2>Inspect an image or video before sending anything to AI.</h2>
-          <p>Metadata, aspect, orientation and a lightweight local visual summary stay on this device.</p>
+          <span className="micro">{t('analyzer.kicker')}</span>
+          <h2>{t('analyzer.title')}</h2>
+          <p>{t('analyzer.body')}</p>
         </div>
         <button className="primary-button" type="button" onClick={() => inputRef.current?.click()} disabled={busy}>
-          <Upload size={15} /> {busy ? 'Analyzing…' : 'Choose media'}
+          <Upload size={15} /> {busy ? t('analyzer.analyzing') : t('analyzer.choose')}
         </button>
       </div>
       <input
@@ -48,8 +50,8 @@ export function AnalyzerPanel() {
       {!analysis && !error && (
         <div className="analysis-empty">
           <ScanSearch size={30} />
-          <strong>No media analyzed yet</strong>
-          <span>Use local analysis first; add NVIDIA/Gemini only when semantic interpretation is useful.</span>
+          <strong>{t('analyzer.none')}</strong>
+          <span>{t('analyzer.noneBody')}</span>
         </div>
       )}
 
@@ -62,18 +64,18 @@ export function AnalyzerPanel() {
             <div><span className="micro">{analysis.kind.toUpperCase()}</span><strong>{analysis.name}</strong></div>
           </div>
           <dl className="analysis-facts">
-            <div><dt>Dimensions</dt><dd>{analysis.width} × {analysis.height}</dd></div>
-            <div><dt>Aspect</dt><dd>{analysis.aspectRatio}</dd></div>
-            <div><dt>Orientation</dt><dd>{analysis.orientation}</dd></div>
+            <div><dt>{t('analyzer.dimensions')}</dt><dd>{analysis.width} × {analysis.height}</dd></div>
+            <div><dt>{t('analyzer.aspect')}</dt><dd>{analysis.aspectRatio}</dd></div>
+            <div><dt>{t('analyzer.orientation')}</dt><dd>{option(analysis.orientation)}</dd></div>
             {analysis.kind === 'image' ? (
               <>
-                <div><dt>Average luminance</dt><dd>{analysis.averageLuma}/255</dd></div>
-                <div className="analysis-colors"><dt>Dominant colors</dt><dd>{analysis.dominantColors.map((color) => <span key={color} title={color} style={{ background: color }} />)}</dd></div>
+                <div><dt>{t('analyzer.averageLuma')}</dt><dd>{analysis.averageLuma}/255</dd></div>
+                <div className="analysis-colors"><dt>{t('analyzer.colors')}</dt><dd>{analysis.dominantColors.map((color) => <span key={color} title={color} style={{ background: color }} />)}</dd></div>
               </>
             ) : (
               <>
-                <div><dt>Duration</dt><dd>{analysis.duration.toFixed(2)}s</dd></div>
-                <div><dt>Suggested sample frames</dt><dd>{analysis.sampleTimes.join(' · ')}s</dd></div>
+                <div><dt>{t('analyzer.duration')}</dt><dd>{analysis.duration.toFixed(2)}s</dd></div>
+                <div><dt>{t('analyzer.samples')}</dt><dd>{analysis.sampleTimes.join(' · ')}s</dd></div>
               </>
             )}
           </dl>
