@@ -1,0 +1,22 @@
+:root {
+  --abrxs-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", Inter, system-ui, sans-serif;
+  --abrxs-bg: #0b0b0c;
+  --abrxs-surface: #111113;
+  --abrxs-surface-2: #19191c;
+  --abrxs-hover: #161618;
+  --abrxs-line: rgba(255,255,255,.085);
+  --abrxs-line-strong: rgba(255,255,255,.16);
+  --abrxs-text: #f5f5f7;
+  --abrxs-muted-strong: #b8b8be;
+  --abrxs-muted: #77777f;
+  --abrxs-accent: #e8890c;
+  --abrxs-success: #52c878;
+  --abrxs-warning: #e8a10c;
+  --abrxs-danger: #e85a5a;
+  --abrxs-radius-sm: 8px;
+  --abrxs-radius-md: 12px;
+  --abrxs-radius-lg: 18px;
+  --abrxs-control-desktop: 38px;
+  --abrxs-control-touch: 44px;
+  color-scheme: dark;
+}

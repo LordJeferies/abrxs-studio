@@ -1,0 +1,19 @@
+{
+  "name": "abrxs-studio",
+  "version": "0.1.0-foundation",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @abrxs/studio-web",
+    "build": "npm run build -w @abrxs/studio-web",
+    "typecheck": "npm run typecheck -w @abrxs/studio-web",
+    "check": "npm run typecheck && npm run doctor",
+    "doctor": "node scripts/doctor.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
