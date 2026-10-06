@@ -1,0 +1,32 @@
+{
+  "name": "Abrxs Vision Art Creator",
+  "short_name": "Abrxs Vision",
+  "description": "Offline-first cinematic prompt, storyboard, carousel and visual direction studio.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#09090a",
+  "theme_color": "#09090a",
+  "orientation": "any",
+  "categories": ["photo", "video", "productivity", "design"],
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Quick Creator",
+      "short_name": "Quick",
+      "url": "./"
+    },
+    {
+      "name": "How to use",
+      "short_name": "Guide",
+      "url": "./guide.html"
+    }
+  ]
+}
