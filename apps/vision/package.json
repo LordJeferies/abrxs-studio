@@ -1,6 +1,6 @@
 {
   "name": "@abrxs/vision",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,9 +9,12 @@
     "build:pages": "tsc -b && vite build",
     "typecheck": "tsc -b",
     "cli": "tsx cli/vision-cli.ts",
+    "pro:cli": "tsx cli/professional-cli.ts",
     "smoke": "tsx cli/vision-cli.ts smoke",
     "mcp": "tsx mcp/server.ts",
     "mcp:smoke": "tsx mcp/smoke.ts",
+    "pro:mcp": "tsx mcp/professional-server.ts",
+    "pro:mcp:smoke": "tsx mcp/professional-smoke.ts",
     "icon": "tauri icon src-tauri/icons/app-icon.svg",
     "desktop:prepare": "npm run icon",
     "desktop:dev": "npm run desktop:prepare && tauri dev",
