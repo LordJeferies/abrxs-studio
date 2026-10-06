@@ -15,13 +15,13 @@ if [ "$(uname -s)" != "Darwin" ]; then
   exit 1
 fi
 
-command -v node >/dev/null || { echo "ERROR: Node 20+ missing. Install with: brew install node"; exit 1; }
+command -v node >/dev/null || { echo "ERROR: Node 20-24 missing. Install with: brew install node"; exit 1; }
 command -v npm >/dev/null || { echo "ERROR: npm missing"; exit 1; }
 command -v git >/dev/null || { echo "ERROR: git missing"; exit 1; }
 
 NODE_MAJOR="$(node -p "process.versions.node.split('.')[0]")"
-if [ "$NODE_MAJOR" -lt 20 ]; then
-  echo "ERROR: Node 20+ required; current: $(node -v)"
+if [ "$NODE_MAJOR" -lt 20 ] || [ "$NODE_MAJOR" -ge 25 ]; then
+  echo "ERROR: Node 20-24 required; current: $(node -v)"
   exit 1
 fi
 
@@ -48,28 +48,31 @@ echo "Cargo: $(cargo --version)"
 echo "Xcode: $(xcode-select -p)"
 
 echo ""
-echo "[1/5] Installing workspace dependencies..."
-npm install
-
-echo ""
-echo "[2/5] Ensuring native icon set exists..."
-ICON_PNG="$ROOT/apps/desktop/src-tauri/icons/icon.png"
-if [ ! -f "$ICON_PNG" ]; then
-  npm run icon -w @abrxs/studio-desktop
+echo "[1/6] Installing workspace dependencies..."
+if [ -f "$ROOT/package-lock.json" ]; then
+  npm ci
 else
-  echo "Icon set already present: $ICON_PNG"
+  npm install
 fi
 
 echo ""
-echo "[3/5] Checking shared frontend..."
+echo "[2/6] Preparing native assets..."
+"$ROOT/scripts/ensure-desktop-assets.sh"
+
+echo ""
+echo "[3/6] Checking shared frontend..."
 npm run typecheck
 
 echo ""
-echo "[4/5] Checking native Desktop crate..."
+echo "[4/6] Building shared frontend..."
+npm run build:web
+
+echo ""
+echo "[5/6] Checking native Desktop crate..."
 npm run desktop:check
 
 echo ""
-echo "[5/5] Running Doctor..."
+echo "[6/6] Running Doctor..."
 npm run doctor
 
 echo ""
