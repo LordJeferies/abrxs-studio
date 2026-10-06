@@ -10,6 +10,7 @@ import {
   type OutputLanguage,
 } from '../src/promptEngine';
 import { buildProviderExecutionPlan, providerRegistry } from '../src/providerRegistry';
+import { deriveSceneStructure } from '../src/sceneEngine';
 import {
   compileSkillPrompt,
   recommendGenerationRoute,
@@ -20,7 +21,7 @@ import {
 } from '../src/skillEngine';
 import { compileShotPackage, generateStoryboard, type StoryboardGrammarId } from '../src/storyboard';
 
-const server = new McpServer({ name: 'abrxs-vision', version: '0.4.0' });
+const server = new McpServer({ name: 'abrxs-vision', version: '0.5.0' });
 const outputLanguage = z.enum(['auto', 'en', 'es']).default('auto');
 const generationMode = z.enum(['text-to-image', 'image-to-image', 'text-to-video', 'image-to-video', 'video-edit']);
 const generationTarget = z.enum(['generic-production', 'higgsfield-cinema', 'higgsfield-seedance', 'higgsfield-kling', 'veo', 'comfyui', 'nvidia', 'gemini']);
@@ -30,11 +31,12 @@ const referenceRole = z.enum(['identity', 'look', 'composition', 'wardrobe', 'lo
 server.registerTool('vision.get_status', {
   description: 'Return Abrxs Vision local-core, skill-engine and provider status.', inputSchema: {},
 }, async () => ({ content: [{ type: 'text', text: JSON.stringify({
-  version: '0.4.0',
+  version: '0.5.0',
   offlineCore: true,
-  promptStandard: 'ABRAXAS production-spec + provider skill engine v0.4',
+  promptStandard: 'ABRAXAS production-spec + provider skill engine v0.5',
   promptOnly: true,
   promptAudit: true,
+  sceneReadiness: true,
   providerPromptCompiler: true,
   routeRecommendation: true,
   targets: targetProfiles.map((target) => target.id),
@@ -70,6 +72,47 @@ server.registerTool('vision.audit_prompt', {
   ...defaults, idea: input.idea, subject: input.subject ?? defaults.subject, environment: input.environment ?? defaults.environment, action: input.action ?? defaults.action,
   visualFunction: input.visualFunction ?? defaults.visualFunction, brandPreset: input.preset ?? defaults.brandPreset, outputLanguage: input.language as OutputLanguage,
 }), null, 2) }] }));
+
+server.registerTool('vision.audit_scene_structure', {
+  description: 'Audit whether a scene has enough dramatic structure to justify shot planning or expensive generation. Returns Goal, Obstacle, Tactic, Reversal and Value Shift as explicit, inferred or unresolved; missing structure is not invented silently.',
+  inputSchema: {
+    idea: z.string().min(1),
+    scene: z.number().int().min(1).max(100).default(1),
+    sceneCount: z.number().int().min(1).max(100).default(1),
+    subject: z.string().optional(),
+    action: z.string().optional(),
+    visualFunction: z.string().optional(),
+    environment: z.string().optional(),
+    goal: z.string().optional(),
+    obstacle: z.string().optional(),
+    tactic: z.string().optional(),
+    reversal: z.string().optional(),
+    valueShift: z.string().optional(),
+  },
+}, async (input) => {
+  const sceneCount = Math.max(input.scene, input.sceneCount);
+  const result = deriveSceneStructure(
+    input.idea,
+    {
+      ...defaults,
+      idea: input.idea,
+      subject: input.subject ?? defaults.subject,
+      action: input.action ?? defaults.action,
+      visualFunction: input.visualFunction ?? defaults.visualFunction,
+      environment: input.environment ?? defaults.environment,
+    },
+    input.scene,
+    sceneCount,
+    {
+      goal: input.goal,
+      obstacle: input.obstacle,
+      tactic: input.tactic,
+      reversal: input.reversal,
+      valueShift: input.valueShift,
+    },
+  );
+  return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+});
 
 server.registerTool('vision.compile_provider_prompt', {
   description: 'Compile a provider/model-aware prompt package. This never spends provider credits; it returns the translated prompt, QA gates, continuity, timeline and an execution plan.',
@@ -125,12 +168,12 @@ server.registerTool('vision.compile_carousel_prompt', {
 }, async (input) => ({ content: [{ type: 'text', text: JSON.stringify(compileCarouselPromptSpec({ number: input.number, title: input.title, body: input.body, narrativeRole: input.role }, input.style, input.textMode, input.preset, input.aspect), null, 2) }] }));
 
 server.registerTool('vision.create_storyboard', {
-  description: 'Create an offline storyboard with continuity contracts from a cinematic grammar.',
+  description: 'Create an offline storyboard with scene-readiness structure and continuity contracts from a cinematic grammar.',
   inputSchema: { idea: z.string().min(1), grammar: z.enum(['classical', 'suspense', 'dialogue', 'emotional', 'documentary', 'montage', 'product', 'social']).default('classical'), scenes: z.number().int().min(1).max(12).default(2), shotsPerScene: z.number().int().min(1).max(12).default(4) },
 }, async ({ idea, grammar, scenes, shotsPerScene }) => ({ content: [{ type: 'text', text: JSON.stringify(generateStoryboard(idea, grammar as StoryboardGrammarId, scenes, shotsPerScene, defaults), null, 2) }] }));
 
 server.registerTool('vision.compile_storyboard_shot', {
-  description: 'Compile one storyboard shot through a target-specific provider grammar while preserving scene continuity.',
+  description: 'Compile one storyboard shot through a target-specific provider grammar while preserving scene structure and continuity.',
   inputSchema: {
     idea: z.string().min(1), grammar: z.enum(['classical', 'suspense', 'dialogue', 'emotional', 'documentary', 'montage', 'product', 'social']).default('classical'),
     scene: z.number().int().min(1).max(12).default(1), shot: z.number().int().min(1).max(12).default(1), target: generationTarget.default('higgsfield-seedance'), preset: z.string().default(defaults.brandPreset),
