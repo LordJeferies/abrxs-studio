@@ -14,22 +14,32 @@ Editorial → Geómetra/Lienzos → Canter → Vision → Dresser → Review →
 
 The arrows are handoffs, not file-format guesses.
 
+## Platform strategy
+
+Abrxs Studio is **Desktop-first**. The desktop build is the canonical production environment because Canter, Vision and Dresser need reliable access to local media, FFmpeg, Whisper, native file dialogs, secure credentials, long-running jobs and hardware-aware rendering.
+
+Web/PWA remains a first-class companion and should be fully functional wherever browser constraints do not reduce stability. Brand, Content, Fichas, Editorial, Review and Publisher are expected to be full web experiences; Geómetra/Lienzos and Vision can be full or near-full depending on asset/provider access; Canter and the heaviest Dresser operations remain Desktop-primary.
+
+Desktop packages its frontend locally and must not depend on GitHub Pages or a remote shell to launch. Web/PWA shares contracts, domain logic and reusable UI, but capabilities are resolved explicitly instead of pretending every runtime can do the same work.
+
+See `docs/architecture/PLATFORM_TARGETS.md`.
+
 ## Architectural layers
 
 ```text
 apps/
-  web/        responsive application shell
-  desktop/    Tauri shell (next phase)
+  desktop/    canonical Tauri production application
+  web/        adapted responsive Web/PWA companion
 
 packages/
   contracts/      versioned domain schemas
-  domain/         application rules (next phase)
-  project-store/  persistence and migrations (next phase)
-  jobs/           long-running process state (next phase)
-  providers/      AI/media capability adapters (next phase)
+  domain/         shared application rules
+  project-store/  persistence and migrations
+  jobs/           long-running process state
+  providers/      AI/media capability adapters
   design-system/  common visual system
-  mcp/            same application services exposed to agents (next phase)
-  doctor/         dependency/capability diagnostics (next phase)
+  mcp/            same application services exposed to agents
+  doctor/         dependency/capability diagnostics
 ```
 
 ## Stability rules
@@ -40,7 +50,9 @@ packages/
 - Long-running tasks expose a `Job` contract with progress, cancel/retry/error semantics.
 - Provider support is capability-driven, not scattered `if provider === ...` branches.
 - Desktop loads packaged assets locally. Remote services are dependencies, not the application shell.
-- PWA/web and Desktop share domain/UI code but secret-bearing provider calls must stay outside an unsafe static browser context.
+- Web/PWA and Desktop share domain/contracts/UI where practical, not runtime assumptions.
+- Secret-bearing provider calls stay in native secure services or trusted server-side infrastructure.
+- Heavy local media operations do not depend on Service Workers.
 
 ## Vision in Brand, Content and Fichas
 
