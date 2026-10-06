@@ -48,19 +48,28 @@ echo "Cargo: $(cargo --version)"
 echo "Xcode: $(xcode-select -p)"
 
 echo ""
-echo "[1/4] Installing workspace dependencies..."
+echo "[1/5] Installing workspace dependencies..."
 npm install
 
 echo ""
-echo "[2/4] Checking shared frontend..."
+echo "[2/5] Ensuring native icon set exists..."
+ICON_PNG="$ROOT/apps/desktop/src-tauri/icons/icon.png"
+if [ ! -f "$ICON_PNG" ]; then
+  npm run icon -w @abrxs/studio-desktop
+else
+  echo "Icon set already present: $ICON_PNG"
+fi
+
+echo ""
+echo "[3/5] Checking shared frontend..."
 npm run typecheck
 
 echo ""
-echo "[3/4] Checking native Desktop crate..."
+echo "[4/5] Checking native Desktop crate..."
 npm run desktop:check
 
 echo ""
-echo "[4/4] Running Doctor..."
+echo "[5/5] Running Doctor..."
 npm run doctor
 
 echo ""
