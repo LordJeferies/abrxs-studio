@@ -31,6 +31,7 @@ jobs:
       - run: npm install
       - run: npm run vision:typecheck
       - run: npm run vision:smoke
+      - run: npm run vision:mcp:smoke
       - run: npm run vision:build:pages
       - name: Prepare Pages artifact
         run: |
@@ -40,8 +41,6 @@ jobs:
           <!doctype html><html><head><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=./vision/"><title>Abrxs Studio</title></head><body><a href="./vision/">Open Abrxs Vision Art Creator</a></body></html>
           EOF
       - uses: actions/configure-pages@v5
-        with:
-          enablement: true
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
