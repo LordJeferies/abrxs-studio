@@ -1,6 +1,6 @@
 {
   "name": "@abrxs/vision",
-  "version": "0.3.0",
+  "version": "0.5.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -16,6 +16,7 @@
     "desktop:prepare": "npm run icon",
     "desktop:dev": "npm run desktop:prepare && tauri dev",
     "desktop:check": "npm run desktop:prepare && cargo check --manifest-path src-tauri/Cargo.toml",
+    "desktop:test": "cargo test --manifest-path src-tauri/Cargo.toml",
     "desktop:build": "npm run desktop:prepare && tauri build"
   },
   "dependencies": {
