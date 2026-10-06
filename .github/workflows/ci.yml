@@ -19,6 +19,7 @@ jobs:
       - run: npm run vision:typecheck
       - run: npm run vision:smoke
       - run: npm run vision:mcp:smoke
+      - run: npm run vision:pro:mcp:smoke
       - run: npm run vision:build
 
   desktop-macos:
@@ -48,6 +49,7 @@ jobs:
       - run: npm run vision:typecheck
       - run: npm run vision:smoke
       - run: npm run vision:mcp:smoke
+      - run: npm run vision:pro:mcp:smoke
       - run: npm run vision:build
       - run: npm run vision:desktop:check
       - run: npm run vision:desktop:build
