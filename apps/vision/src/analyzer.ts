@@ -37,7 +37,7 @@ function ratio(width: number, height: number) {
   const match = common
     .map(([w, h]) => ({ label: `${w}:${h}`, delta: Math.abs(value - w / h) }))
     .sort((a, b) => a.delta - b.delta)[0];
-  return match.delta < 0.07 ? match.label : `${width}:${height}`;
+  return match.delta < 0.07 ? match.label : `${Math.round(width)}:${Math.round(height)}`;
 }
 
 function orientation(width: number, height: number) {
@@ -55,15 +55,20 @@ function rgbHex(r: number, g: number, b: number) {
 
 export async function analyzeImage(file: File): Promise<LocalImageAnalysis> {
   const bitmap = await createImageBitmap(file);
+  const sourceWidth = bitmap.width;
+  const sourceHeight = bitmap.height;
   const max = 256;
-  const scale = Math.min(1, max / Math.max(bitmap.width, bitmap.height));
-  const width = Math.max(1, Math.round(bitmap.width * scale));
-  const height = Math.max(1, Math.round(bitmap.height * scale));
+  const scale = Math.min(1, max / Math.max(sourceWidth, sourceHeight));
+  const width = Math.max(1, Math.round(sourceWidth * scale));
+  const height = Math.max(1, Math.round(sourceHeight * scale));
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
-  if (!ctx) throw new Error('Canvas analysis is unavailable.');
+  if (!ctx) {
+    bitmap.close();
+    throw new Error('Canvas analysis is unavailable.');
+  }
   ctx.drawImage(bitmap, 0, 0, width, height);
   bitmap.close();
 
@@ -80,9 +85,9 @@ export async function analyzeImage(file: File): Promise<LocalImageAnalysis> {
     if (a < 20) continue;
     lumaTotal += 0.2126 * r + 0.7152 * g + 0.0722 * b;
     count += 1;
-    const qr = Math.round(r / 48) * 48;
-    const qg = Math.round(g / 48) * 48;
-    const qb = Math.round(b / 48) * 48;
+    const qr = Math.min(255, Math.round(r / 48) * 48);
+    const qg = Math.min(255, Math.round(g / 48) * 48);
+    const qb = Math.min(255, Math.round(b / 48) * 48);
     const key = `${qr}-${qg}-${qb}`;
     const item = buckets.get(key) ?? { r: qr, g: qg, b: qb, count: 0 };
     item.count += 1;
@@ -97,10 +102,10 @@ export async function analyzeImage(file: File): Promise<LocalImageAnalysis> {
   return {
     kind: 'image',
     name: file.name,
-    width: bitmap.width || canvas.width,
-    height: bitmap.height || canvas.height,
-    aspectRatio: ratio(canvas.width / scale, canvas.height / scale),
-    orientation: orientation(canvas.width / scale, canvas.height / scale),
+    width: sourceWidth,
+    height: sourceHeight,
+    aspectRatio: ratio(sourceWidth, sourceHeight),
+    orientation: orientation(sourceWidth, sourceHeight),
     averageLuma: Math.round(count ? lumaTotal / count : 0),
     dominantColors,
   };
