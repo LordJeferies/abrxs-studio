@@ -16,6 +16,8 @@ jobs:
       - run: npm install
       - run: npm run typecheck
       - run: npm run build:web
+      - run: npm run vision:typecheck
+      - run: npm run vision:build
 
   desktop-macos:
     runs-on: macos-latest
@@ -30,3 +32,29 @@ jobs:
       - run: npm run desktop:assets
       - run: npm run desktop:check
       - run: npm run build:web
+
+  vision-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: dtolnay/rust-toolchain@stable
+      - run: npm install
+      - run: chmod +x scripts/*.sh
+      - run: npm run vision:typecheck
+      - run: npm run vision:build
+      - run: npm run vision:desktop:check
+      - run: npm run vision:desktop:build
+      - name: Package macOS app
+        run: |
+          APP="$(find apps/vision/src-tauri/target/release/bundle/macos -maxdepth 1 -name '*.app' -print -quit)"
+          test -n "$APP"
+          mkdir -p dist/vision
+          ditto -c -k --sequesterRsrc --keepParent "$APP" dist/vision/Abrxs-Vision-Art-Creator-macOS.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Abrxs-Vision-Art-Creator-macOS
+          path: dist/vision/Abrxs-Vision-Art-Creator-macOS.zip
+          if-no-files-found: error
