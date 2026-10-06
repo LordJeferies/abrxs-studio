@@ -1,0 +1,38 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Abrxs Studio",
+  "version": "0.1.0",
+  "identifier": "com.abrxs.studio",
+  "build": {
+    "beforeDevCommand": "npm run dev:web",
+    "devUrl": "http://localhost:4173",
+    "beforeBuildCommand": "npm run build:web",
+    "frontendDist": "../../web/dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "Abrxs Studio",
+        "width": 1480,
+        "height": 920,
+        "minWidth": 900,
+        "minHeight": 640,
+        "resizable": true,
+        "fullscreen": false,
+        "decorations": true,
+        "transparent": false,
+        "center": true
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "category": "Productivity",
+    "shortDescription": "AI-native content production studio",
+    "longDescription": "Abrxs Studio unifies Brand, Content, Fichas, Editorial, Geometra, Canter, Vision, Dresser, Review and Publisher in one desktop-first production environment."
+  }
+}
