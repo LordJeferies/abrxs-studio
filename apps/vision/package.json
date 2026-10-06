@@ -1,12 +1,16 @@
 {
   "name": "@abrxs/vision",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 4174",
     "build": "tsc -b && vite build",
+    "build:pages": "tsc -b && VITE_BASE_PATH=/abrxs-studio/vision/ vite build",
     "typecheck": "tsc -b",
+    "cli": "tsx cli/vision-cli.ts",
+    "smoke": "tsx cli/vision-cli.ts smoke",
+    "mcp": "tsx mcp/server.ts",
     "icon": "tauri icon src-tauri/icons/app-icon.svg",
     "desktop:prepare": "npm run icon",
     "desktop:dev": "npm run desktop:prepare && tauri dev",
@@ -15,15 +19,18 @@
   },
   "dependencies": {
     "@abrxs/design-system": "0.1.0",
+    "@modelcontextprotocol/sdk": "^1.19.1",
     "lucide-react": "^0.468.0",
     "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "react-dom": "^19.1.1",
+    "zod": "^3.25.0"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.0.0",
     "@types/react": "^19.1.16",
     "@types/react-dom": "^19.1.9",
     "@vitejs/plugin-react": "^5.0.4",
+    "tsx": "^4.20.6",
     "typescript": "^5.9.3",
     "vite": "^7.1.9"
   }
