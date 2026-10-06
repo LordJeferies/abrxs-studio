@@ -14,11 +14,16 @@
     "build:web": "npm run build -w @abrxs/studio-web",
     "desktop:build": "npm run build -w @abrxs/studio-desktop",
     "desktop:check": "npm run check -w @abrxs/studio-desktop",
+    "desktop:assets": "./scripts/ensure-desktop-assets.sh",
     "typecheck": "npm run typecheck -w @abrxs/studio-web",
     "check": "npm run typecheck && npm run doctor",
     "doctor": "node scripts/doctor.mjs"
   },
+  "allowScripts": {
+    "esbuild": true,
+    "fsevents": true
+  },
   "engines": {
-    "node": ">=20"
+    "node": ">=20 <25"
   }
 }
