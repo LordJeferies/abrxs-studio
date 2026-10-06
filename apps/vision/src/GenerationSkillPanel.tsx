@@ -1,18 +1,4 @@
-import {
-  Ban,
-  CheckCircle2,
-  Copy,
-  Film,
-  Image as ImageIcon,
-  PackageCheck,
-  Play,
-  RefreshCw,
-  ShieldCheck,
-  Sparkles,
-  Timer,
-  Type,
-  Workflow,
-} from 'lucide-react';
+import { CheckCircle2, Copy, Film, Image as ImageIcon, Play, RefreshCw, ShieldCheck, Sparkles, Timer, Workflow } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import {
   higgsfieldDesktopGenerate,
@@ -26,12 +12,11 @@ import {
   type HiggsfieldStatus,
   type LiveModelOption,
 } from './desktopBridge';
-import { getOutputProfile, outputProfiles, type PromptOutputProfileId } from './outputProfiles';
 import {
   compileProfessionalPrompt,
-  defaultProfessionalBrief,
+  professionalBriefDefaults,
   type ProfessionalPromptBrief,
-} from './professionalPrompt';
+} from './professionalPromptEngine';
 import type { DirectorState } from './promptEngine';
 import {
   generationIntents,
@@ -46,6 +31,7 @@ import {
 const MODES: GenerationMode[] = ['text-to-image', 'image-to-image', 'text-to-video', 'image-to-video', 'video-edit'];
 const HIGGSFIELD_TARGETS: GenerationTargetId[] = ['higgsfield-cinema', 'higgsfield-seedance', 'higgsfield-kling', 'veo'];
 const BRIEF_KEY = 'abrxsVisionProfessionalBriefV1';
+const BRIEF_EVENT = 'abrxs-vision-professional-brief';
 
 function storedTarget(): GenerationTargetId {
   const value = localStorage.getItem('abrxsVisionSkillTargetV1') as GenerationTargetId | null;
@@ -62,55 +48,45 @@ function storedIntent(): GenerationIntent {
 function storedBrief(): ProfessionalPromptBrief {
   try {
     const raw = localStorage.getItem(BRIEF_KEY);
-    if (!raw) return defaultProfessionalBrief;
-    return { ...defaultProfessionalBrief, ...(JSON.parse(raw) as Partial<ProfessionalPromptBrief>) };
+    return raw ? { ...professionalBriefDefaults, ...(JSON.parse(raw) as Partial<ProfessionalPromptBrief>) } : professionalBriefDefaults;
   } catch {
-    return defaultProfessionalBrief;
+    return professionalBriefDefaults;
   }
 }
 
-const GATE_LABELS: Record<string, [string, string]> = {
-  canonical: ['Canonical production specification', 'Especificación de producción canónica'],
-  'camera-feasibility': ['Camera feasibility', 'Viabilidad de cámara'],
-  temporal: ['Temporal coherence', 'Coherencia temporal'],
-  continuity: ['Continuity lock', 'Bloqueo de continuidad'],
-  references: ['Reference semantics', 'Semántica de referencias'],
-  'i2v-input': ['I2V first-frame contract', 'Contrato de primer fotograma I2V'],
-  'provider-length': ['Provider prompt budget', 'Presupuesto de prompt del proveedor'],
-  physics: ['Physical plausibility', 'Plausibilidad física'],
-  evidence: ['Evidence integrity', 'Integridad de evidencia'],
-  purpose: ['Visual function', 'Función visual'],
-  output: ['Output contract', 'Contrato de salida'],
-  'must-have': ['Must-have clarity', 'Claridad de obligatorios'],
-  'constraint-strategy': ['Constraint strategy', 'Estrategia de restricciones'],
-  'action-economy': ['Action economy', 'Economía de acciones'],
-  'camera-economy': ['Camera economy', 'Economía de cámara'],
-  performance: ['Performance specificity', 'Especificidad de actuación'],
-  'literal-text': ['Literal text safety', 'Seguridad de texto literal'],
-  overprompting: ['Prompt economy', 'Economía del prompt'],
-};
-
-function localizedGateLabel(id: string, fallback: string, es: boolean) {
-  const pair = GATE_LABELS[id];
+function gateLabel(id: string, fallback: string, es: boolean) {
+  const labels: Record<string, [string, string]> = {
+    canonical: ['Canonical production spec', 'Especificación canónica'],
+    want: ['What I want', 'Qué quiero'],
+    'must-have': ['Must-have clarity', 'Claridad de obligatorios'],
+    'do-not': ['No Prompt / exclusion intent', 'No Prompt / exclusiones'],
+    output: ['Output contract', 'Contrato de salida'],
+    'mode-output': ['Output / mode compatibility', 'Compatibilidad output / modo'],
+    'action-load': ['Action load', 'Carga de acciones'],
+    'camera-load': ['Camera load', 'Carga de cámara'],
+    'anti-slop': ['Anti-slop language', 'Lenguaje anti-slop'],
+    emotion: ['Performance specificity', 'Especificidad de actuación'],
+    i2v: ['I2V first-frame contract', 'Contrato de primer fotograma I2V'],
+    'literal-text': ['Literal text risk', 'Riesgo de texto literal'],
+    constraints: ['Constraint translation', 'Traducción de restricciones'],
+    'prompt-budget': ['Provider prompt budget', 'Presupuesto del prompt'],
+  };
+  const pair = labels[id];
   return pair ? (es ? pair[1] : pair[0]) : fallback;
 }
 
-function localizedWarning(warning: string, es: boolean) {
+function localWarning(warning: string, es: boolean) {
   if (!es) return warning;
-  if (warning.startsWith('Resolve the live provider/model capability catalog')) return 'Resuelve el catálogo vivo de capacidades del proveedor/modelo antes de ejecutar; no asumas que todos los targets exponen hoy los mismos controles.';
-  if (warning.startsWith('Prompt exceeds')) return 'El prompt supera el presupuesto recomendado del target y debe comprimirse antes de enviarse.';
-  if (warning.startsWith('Prompt is likely over-detailed')) return 'El prompt probablemente está sobrecargado para este target; prioriza decisiones explícitas y elimina adjetivos repetidos.';
-  if (warning.startsWith('Image-to-video requires')) return 'Image-to-video requiere un primer fotograma o imagen de referencia real. Vision no inventará ese input silenciosamente.';
-  if (warning.startsWith('I2V should emphasize')) return 'En I2V el prompt debe describir movimiento y cambio. No rediseñes en texto lo que ya existe en el primer fotograma.';
-  if (warning.startsWith('Literal text inside')) return 'El texto literal dentro de imágenes generadas depende del modelo. Usa una capa de texto separada cuando la redacción deba ser exacta.';
-  if (warning.startsWith('More than two camera moves')) return 'Hay más de dos movimientos de cámara compitiendo en el mismo plano; ordénalos por tiempo o divide el plano.';
-  if (warning.startsWith('Static camera conflicts')) return '“Cámara estática” entra en conflicto con otro movimiento simultáneo.';
-  if (warning.startsWith('Rewrite these exclusions')) return warning.replace('Rewrite these exclusions as a desired state for this target:', 'Reescribe estas exclusiones como un estado deseado para este target:');
-  if (warning.startsWith('Exact typography')) return 'La tipografía exacta es más segura como capa separada. Genera una imagen limpia + asset de texto salvo que el modelo vivo demuestre buena fidelidad tipográfica.';
-  if (warning.startsWith('Too many actions')) return 'Hay demasiadas acciones compitiendo en un clip. Divide en planos o conserva una acción principal y una o dos secundarias.';
-  if (warning.startsWith('Too many camera moves')) return 'Hay demasiados movimientos de cámara en un plano. Ordénalos por tiempo o divide el plano.';
-  if (warning.startsWith('The must-have list')) return 'La lista de obligatorios se está convirtiendo en un segundo prompt. Mueve detalle estructural a sujeto/acción/escena o divide el asset.';
-  return warning;
+  return warning
+    .replace('Replace vague quality adjectives with concrete camera, light, material, behavior or composition decisions.', 'Reemplaza adjetivos vagos por decisiones concretas de cámara, luz, material, conducta o composición.')
+    .replace('Generic emotion detected. Describe physical performance instead of leaving the model to choose a random emotional realization.', 'Se detectó una emoción genérica. Describe actuación física en vez de dejar al modelo elegir una realización aleatoria.')
+    .replace('The shot carries too many action phases. Split the scene or reduce it to one primary action plus one or two secondary motions.', 'El plano tiene demasiadas fases de acción. Divide la escena o conserva una acción principal y una o dos secundarias.')
+    .replace('The shot carries too many camera moves. Sequence them explicitly or split the shot.', 'El plano tiene demasiados movimientos de cámara. Ordénalos explícitamente o divide el plano.')
+    .replace('Do not execute I2V until an actual first frame is supplied.', 'No ejecutes I2V hasta aportar un primer fotograma real.')
+    .replace('Exact text is safer as a separate typography layer unless the selected live model proves reliable text rendering.', 'El texto exacto es más seguro como capa tipográfica separada salvo que el modelo vivo demuestre buena fidelidad de texto.')
+    .replace('Negative/exclusion support must be mapped from the live provider schema before execution.', 'El soporte de negativos/exclusiones debe resolverse desde el esquema vivo del proveedor antes de ejecutar.')
+    .replace('Target prompt exceeds the provider prompt budget and must be compressed before execution.', 'El prompt supera el presupuesto del proveedor y debe comprimirse antes de ejecutar.')
+    .replace('The must-have list is becoming a second prompt. Split the asset/shot or move structural detail into the canonical scene fields.', 'La lista de obligatorios se está convirtiendo en un segundo prompt. Divide el asset/plano o mueve el detalle estructural a los campos canónicos.');
 }
 
 export function GenerationSkillPanel({
@@ -146,7 +122,14 @@ export function GenerationSkillPanel({
   useEffect(() => localStorage.setItem('abrxsVisionSkillTargetV1', target), [target]);
   useEffect(() => localStorage.setItem('abrxsVisionSkillModeV1', mode), [mode]);
   useEffect(() => localStorage.setItem('abrxsVisionSkillIntentV1', intent), [intent]);
-  useEffect(() => localStorage.setItem(BRIEF_KEY, JSON.stringify(brief)), [brief]);
+  useEffect(() => {
+    const syncBrief = (event: Event) => {
+      const custom = event as CustomEvent<ProfessionalPromptBrief>;
+      setBrief(custom.detail ?? storedBrief());
+    };
+    window.addEventListener(BRIEF_EVENT, syncBrief);
+    return () => window.removeEventListener(BRIEF_EVENT, syncBrief);
+  }, []);
   useEffect(() => {
     if (!desktop) return;
     void higgsfieldDesktopStatus().then(setDesktopStatus).catch((error) => setDesktopStatus({ installed: false, error: String(error) }));
@@ -157,16 +140,14 @@ export function GenerationSkillPanel({
   const firstFrameTagged = normalizedRefs.some((reference) => reference.role === 'first-frame');
   const compilation = useMemo(() => compileProfessionalPrompt({
     director,
-    mode,
     target,
+    mode,
     intent,
     duration,
     references: normalizedRefs,
     startImageProvided: Boolean(startImage.trim()) || firstFrameTagged,
-    literalText: brief.literalText,
-    audioDirection: brief.audioIntent,
-  }, brief), [director, mode, target, intent, duration, normalizedRefs, startImage, firstFrameTagged, brief]);
-  const activeOutput = useMemo(() => getOutputProfile(brief.outputProfile), [brief.outputProfile]);
+    brief,
+  }), [director, target, mode, intent, duration, normalizedRefs, startImage, firstFrameTagged, brief]);
   const route = useMemo(() => recommendGenerationRoute({
     mode,
     intent,
@@ -174,14 +155,6 @@ export function GenerationSkillPanel({
     multiShot: intent === 'cinematic' || intent === 'social-hook',
     videoEdit: mode === 'video-edit',
   }), [mode, intent, normalizedRefs]);
-
-  const updateBrief = <K extends keyof ProfessionalPromptBrief>(key: K, value: ProfessionalPromptBrief[K]) => setBrief((current) => ({ ...current, [key]: value }));
-
-  const chooseOutput = (id: PromptOutputProfileId) => {
-    const profile = getOutputProfile(id);
-    setBrief((current) => ({ ...current, outputProfile: id }));
-    if (profile.defaultMode !== mode) setMode(profile.defaultMode);
-  };
 
   const modeLabel = (value: GenerationMode) => {
     const labels: Record<GenerationMode, [string, string]> = {
@@ -209,12 +182,12 @@ export function GenerationSkillPanel({
   };
   const routeText = () => {
     if (!es) return route.rationale[0];
-    if (route.primary === 'higgsfield-cinema') return 'Conviene resolver primero una imagen/shot cinematográfico con referencias y continuidad antes de ejecutar variantes.';
+    if (route.primary === 'higgsfield-cinema') return 'Resuelve primero un frame/shot cinematográfico con referencias y continuidad antes de variantes costosas.';
     if (route.primary === 'higgsfield-seedance') return 'Este trabajo se beneficia de beats temporales explícitos, referencias con rol y continuidad de corto formato.';
     if (route.primary === 'higgsfield-kling') return 'El trabajo requiere una ruta de video/edit compatible y validación del esquema vivo antes de enviar material.';
     if (route.primary === 'veo') return 'El audio forma parte de la intención; verifica en vivo que el modelo elegido soporte la configuración requerida.';
     if (route.primary === 'comfyui') return 'La ejecución local depende del workflow y de los nodos instalados; valida ambos antes de generar.';
-    return 'Vision conserva la especificación canónica y valida las capacidades reales antes de ejecutar.';
+    return 'Vision conserva la especificación canónica y valida capacidades reales antes de ejecutar.';
   };
 
   const refreshModels = async () => {
@@ -225,8 +198,7 @@ export function GenerationSkillPanel({
       if (!status.installed) throw new Error(status.error || 'Higgsfield CLI not installed.');
       const payload = await higgsfieldDesktopModels();
       const models = normalizeHiggsfieldModels(payload); setLiveModels(models);
-      if (!models.length) setProviderMessage(es ? 'El CLI respondió, pero no pude normalizar el catálogo. Puedes escribir el model id manualmente.' : 'CLI responded, but the catalog shape could not be normalized. You can type the model id manually.');
-      else setProviderMessage(es ? `${models.length} modelos descubiertos en vivo.` : `${models.length} live models discovered.`);
+      setProviderMessage(models.length ? (es ? `${models.length} modelos descubiertos en vivo.` : `${models.length} live models discovered.`) : (es ? 'El CLI respondió, pero el catálogo no pudo normalizarse. Puedes escribir el model id manualmente.' : 'CLI responded, but the catalog could not be normalized. You can type the model id manually.'));
     } catch (error) { setProviderMessage(error instanceof Error ? error.message : String(error)); }
     finally { setProviderBusy(false); }
   };
@@ -250,19 +222,15 @@ export function GenerationSkillPanel({
       });
       setPreflight(result);
       const omitted = result.plan?.omitted?.length ?? 0;
-      setProviderMessage(es
-        ? `Preflight listo. ${result.plan?.applied?.length ?? 0} parámetros aceptados${omitted ? `; ${omitted} omitidos por el esquema vivo` : ''}.`
-        : `Preflight ready. ${result.plan?.applied?.length ?? 0} parameters accepted${omitted ? `; ${omitted} omitted by the live schema` : ''}.`);
+      setProviderMessage(es ? `Preflight listo. ${result.plan?.applied?.length ?? 0} parámetros aceptados${omitted ? `; ${omitted} omitidos por el esquema vivo` : ''}.` : `Preflight ready. ${result.plan?.applied?.length ?? 0} parameters accepted${omitted ? `; ${omitted} omitted by the live schema` : ''}.`);
       return result;
     } catch (error) {
-      setPreflight(null);
-      setProviderMessage(error instanceof Error ? error.message : String(error));
-      return null;
+      setPreflight(null); setProviderMessage(error instanceof Error ? error.message : String(error)); return null;
     } finally { setProviderBusy(false); }
   };
 
   const generate = async () => {
-    if (!desktop || !modelId || !confirmSpend) return;
+    if (!desktop || !modelId || !confirmSpend || compilation.quality.grade === 'D') return;
     if (mode === 'image-to-video' && !startImage.trim()) {
       setProviderMessage(es ? 'Para ejecutar I2V en Desktop escribe la ruta local del primer fotograma. Una referencia de identidad no sustituye el frame inicial.' : 'For Desktop I2V execution, provide the local first-frame path. An identity reference does not replace the starting frame.');
       return;
@@ -271,83 +239,26 @@ export function GenerationSkillPanel({
     if (!checked) return;
     setProviderBusy(true); setProviderMessage(es ? 'Generando mediante el CLI oficial de Higgsfield…' : 'Generating through the official Higgsfield CLI…'); setProviderResult(null);
     try {
-      const result = await higgsfieldDesktopGenerate({
-        modelId,
-        prompt: compilation.providerPrompt,
-        aspectRatio: director.aspect,
-        duration: mode.includes('video') ? duration : undefined,
-        startImage: startImage.trim() || undefined,
-        resolution: resolution.trim() || undefined,
-        confirmSpend,
-      });
-      setProviderResult(result);
-      setPreflight(result.preflight ? { ok: true, modelId, plan: result.preflight } : checked);
-      setProviderMessage(es ? 'Trabajo completado. Revisa la respuesta del proveedor y el preflight aplicado.' : 'Job completed. Review the provider response and applied preflight.');
-      setConfirmSpend(false);
+      const result = await higgsfieldDesktopGenerate({ modelId, prompt: compilation.targetPrompt, aspectRatio: director.aspect, duration: mode.includes('video') ? duration : undefined, startImage: startImage.trim() || undefined, resolution: resolution.trim() || undefined, confirmSpend });
+      setProviderResult(result); setPreflight(result.preflight ? { ok: true, modelId, plan: result.preflight } : checked);
+      setProviderMessage(es ? 'Trabajo completado. Revisa la respuesta del proveedor y el preflight aplicado.' : 'Job completed. Review the provider response and applied preflight.'); setConfirmSpend(false);
     } catch (error) { setProviderMessage(error instanceof Error ? error.message : String(error)); }
     finally { setProviderBusy(false); }
   };
 
   return <section className="skill-engine-panel">
-    <div className="skill-engine-head">
-      <div><span className="micro">VISUAL GENERATION SKILL ENGINE · PROFESSIONAL V0.6</span><h2>{es ? 'Primero define el resultado. Luego compila para el modelo.' : 'Define the result first. Then compile for the model.'}</h2><p>{es ? 'Vision separa intención, output, obligatorios, “No Prompt”, continuidad y parámetros. El target recibe sólo la gramática que le conviene; no una bolsa genérica de palabras.' : 'Vision separates intent, output, must-haves, No Prompt, continuity and parameters. The target receives the grammar it benefits from, not a generic bag of words.'}</p></div>
-      <div className={`skill-score grade-${compilation.professionalQuality.grade.toLowerCase()}`}><strong>{compilation.professionalQuality.grade}</strong><span>{compilation.professionalQuality.score}/100</span></div>
-    </div>
+    <div className="skill-engine-head"><div><span className="micro">VISUAL GENERATION TRANSLATOR · V0.6</span><h2>{es ? 'Un brief profesional. Una traducción distinta por modelo.' : 'One professional brief. A different translation per model.'}</h2><p>{es ? 'Edita Qué quiero / No Prompt / Output / Performance en Prompt Lab. Esta sección toma ese mismo brief y lo convierte al target, valida calidad y prepara ejecución.' : 'Edit What I want / No Prompt / Output / Performance in Prompt Lab. This section consumes that same brief, translates it to the target, validates quality and prepares execution.'}</p></div><div className={`skill-score grade-${compilation.quality.grade.toLowerCase()}`}><strong>{compilation.quality.grade}</strong><span>{compilation.quality.score}/100</span></div></div>
 
-    <section className="professional-brief-card">
-      <div className="professional-brief-head">
-        <div><span className="micro">{es ? 'BRIEF PROFESIONAL' : 'PROFESSIONAL BRIEF'}</span><strong>{es ? 'Qué quieres recibir y qué no debe romperse.' : 'What you want back and what must not break.'}</strong></div>
-        <div className="constraint-strategy-chip"><ShieldCheck size={13}/><span>{compilation.constraintPack.strategy}</span></div>
-      </div>
+    <div className="skill-engine-grid"><div className="skill-controls-card"><label><span>{es ? 'Destino' : 'Target'}</span><select value={target} onChange={(event) => { setTarget(event.target.value as GenerationTargetId); setModelId(''); setModelSchema(null); setPreflight(null); setProviderResult(null); setConfirmSpend(false); }}>{targetProfiles.map((profile) => <option key={profile.id} value={profile.id}>{profile.label}</option>)}</select></label><label><span>{es ? 'Modo' : 'Mode'}</span><select value={mode} onChange={(event) => setMode(event.target.value as GenerationMode)}>{MODES.map((value) => <option key={value} value={value}>{modeLabel(value)}</option>)}</select></label><label><span>{es ? 'Intención' : 'Intent'}</span><select value={intent} onChange={(event) => setIntent(event.target.value as GenerationIntent)}>{generationIntents.map((value) => <option key={value} value={value}>{intentLabel(value)}</option>)}</select></label><label><span>{es ? 'Duración' : 'Duration'}</span><div className="skill-duration"><Timer size={14}/><input type="number" min={2} max={60} value={duration} disabled={!mode.includes('video')} onChange={(event) => setDuration(Math.max(2, Math.min(60, Number(event.target.value) || 8)))}/><small>s</small></div></label><div className="route-card"><Workflow size={16}/><div><span className="micro">{es ? 'RUTA SUGERIDA' : 'SUGGESTED ROUTE'}</span><strong>{targetProfiles.find((profile) => profile.id === route.primary)?.label ?? route.primary}</strong><p>{routeText()}</p></div></div><div className="skill-badges"><span>MCSLA</span><span>I2V Δ</span><span>OUTPUT CONTRACT</span><span>NO-PROMPT POLICY</span><span>CONTINUITY</span><span>LIVE SCHEMA</span></div></div>
 
-      <div className="professional-brief-grid">
-        <label className="professional-field output-field"><span>{es ? 'Tipo de output' : 'Output type'}</span><select value={brief.outputProfile} onChange={(event) => chooseOutput(event.target.value as PromptOutputProfileId)}>{outputProfiles.map((profile) => <option key={profile.id} value={profile.id}>{profile.label[language]}</option>)}</select><small>{activeOutput.description[language]}</small></label>
-        <label className="professional-field"><span><PackageCheck size={12}/>{es ? 'Debe incluir' : 'Must include'}</span><textarea value={brief.mustHave} onChange={(event) => updateBrief('mustHave', event.target.value)} placeholder={es ? 'Objetos, posiciones, gestos, evidencia, props, composición obligatoria…' : 'Required objects, positions, gestures, evidence, props, composition…'}/><small>{es ? 'Sólo decisiones obligatorias. Si la lista crece demasiado, Vision te pedirá dividir el plano/asset.' : 'Only mandatory decisions. If this becomes too long, Vision will flag the asset/shot for splitting.'}</small></label>
-        <label className="professional-field no-prompt-field"><span><Ban size={12}/>{es ? 'No Prompt / No quiero' : 'No Prompt / Do not want'}</span><textarea value={brief.mustAvoid} onChange={(event) => updateBrief('mustAvoid', event.target.value)} placeholder={es ? 'Neón, piel plástica, texto falso, oficina de stock, cámara temblorosa…' : 'Neon, waxy skin, fake text, stock-office staging, shaky camera…'}/><small>{es ? 'No se pega ciegamente al prompt. Vision lo traduce a restricciones positivas cuando el modelo responde mejor así.' : 'This is not blindly appended. Vision translates it into positive constraints when the target responds better that way.'}</small></label>
-      </div>
+      <article className="skill-output-card"><div className="skill-output-head"><div><span className="micro">{es ? 'PROMPT DEL TARGET' : 'TARGET PROMPT'}</span><strong>{targetProfiles.find((profile) => profile.id === target)?.label ?? target} · {compilation.outputProfile.label[language]}</strong></div><button className="icon-button" type="button" onClick={() => onCopy(compilation.targetPrompt)} aria-label="Copy target prompt"><Copy size={15}/></button></div><pre>{compilation.targetPrompt}</pre><details className="provider-schema"><summary>{es ? 'Contrato + parámetros + restricciones' : 'Contract + parameters + constraints'}</summary><pre>{JSON.stringify({ output: compilation.outputContract, parameters: compilation.parameterPack, constraints: compilation.constraintPack }, null, 2)}</pre></details></article></div>
 
-      <details className="professional-advanced">
-        <summary>{es ? 'Dirección avanzada · actuación, texto, física, audio y entrega' : 'Advanced direction · performance, text, physics, audio and delivery'}</summary>
-        <div className="professional-advanced-grid">
-          <label className="professional-field"><span>{es ? 'Actuación / microcomportamiento' : 'Performance / micro-behavior'}</span><textarea value={brief.performance} onChange={(event) => updateBrief('performance', event.target.value)} placeholder={es ? 'Mandíbula tensa, mirada fija, respiración corta; la mano deja de moverse justo antes de decidir…' : 'Set jaw, fixed gaze, shallow breath; the hand stops moving just before the decision…'}/></label>
-          <label className="professional-field"><span><Type size={12}/>{es ? 'Texto literal exacto' : 'Exact literal text'}</span><textarea value={brief.literalText} onChange={(event) => updateBrief('literalText', event.target.value)} placeholder={es ? 'Déjalo vacío si el texto se agregará luego como capa.' : 'Leave blank when typography will be added later as a layer.'}/></label>
-          <label className="professional-field"><span>{es ? 'Física / comportamiento material' : 'Physics / material behavior'}</span><textarea value={brief.physicsNotes} onChange={(event) => updateBrief('physicsNotes', event.target.value)} placeholder={es ? 'Papel se flexiona con gravedad real; vapor asciende; tela conserva peso…' : 'Paper flexes with real gravity; steam rises; fabric keeps believable weight…'}/></label>
-          <label className="professional-field"><span>{es ? 'Audio' : 'Audio intent'}</span><textarea value={brief.audioIntent} onChange={(event) => updateBrief('audioIntent', event.target.value)} placeholder={es ? 'Ambiente, diálogo, silencio, golpe sonoro, música secundaria…' : 'Ambience, dialogue, silence, impact cue, secondary music…'}/></label>
-          <label className="professional-field professional-wide"><span>{es ? 'Entrega / uso posterior' : 'Delivery / downstream use'}</span><textarea value={brief.deliveryNotes} onChange={(event) => updateBrief('deliveryNotes', event.target.value)} placeholder={es ? 'Debe permitir texto arriba a la derecha; se animará en Dresser; necesito clean plate + sujeto…' : 'Keep top-right copy space; will animate in Dresser; need clean plate + subject…'}/></label>
-        </div>
-      </details>
-
-      <div className="output-contract-strip">
-        <div><span className="micro">{es ? 'ENTREGABLES' : 'DELIVERABLES'}</span><div>{activeOutput.deliverables.map((item) => <span key={item}>{item}</span>)}</div></div>
-        <div><span className="micro">{es ? 'POLÍTICA DE TEXTO' : 'TEXT POLICY'}</span><strong>{activeOutput.textPolicy}</strong></div>
-        <div><span className="micro">{es ? 'ALFA' : 'ALPHA'}</span><strong>{activeOutput.alpha ? (es ? 'REQUERIDA' : 'REQUIRED') : (es ? 'NO' : 'NO')}</strong></div>
-      </div>
-    </section>
-
-    <div className="skill-engine-grid">
-      <div className="skill-controls-card">
-        <label><span>{es ? 'Destino' : 'Target'}</span><select value={target} onChange={(event) => { setTarget(event.target.value as GenerationTargetId); setModelId(''); setModelSchema(null); setPreflight(null); setProviderResult(null); setConfirmSpend(false); }}>{targetProfiles.map((profile) => <option key={profile.id} value={profile.id}>{profile.label}</option>)}</select></label>
-        <label><span>{es ? 'Modo' : 'Mode'}</span><select value={mode} onChange={(event) => setMode(event.target.value as GenerationMode)}>{MODES.map((value) => <option key={value} value={value}>{modeLabel(value)}</option>)}</select></label>
-        <label><span>{es ? 'Intención' : 'Intent'}</span><select value={intent} onChange={(event) => setIntent(event.target.value as GenerationIntent)}>{generationIntents.map((value) => <option key={value} value={value}>{intentLabel(value)}</option>)}</select></label>
-        <label><span>{es ? 'Duración' : 'Duration'}</span><div className="skill-duration"><Timer size={14}/><input type="number" min={2} max={60} value={duration} disabled={!mode.includes('video')} onChange={(event) => setDuration(Math.max(2, Math.min(60, Number(event.target.value) || 8)))}/><small>s</small></div></label>
-        <div className="route-card"><Workflow size={16}/><div><span className="micro">{es ? 'RUTA SUGERIDA' : 'SUGGESTED ROUTE'}</span><strong>{targetProfiles.find((profile) => profile.id === route.primary)?.label ?? route.primary}</strong><p>{routeText()}</p></div></div>
-        <div className="skill-badges"><span>MCSLA</span><span>I2V Δ</span><span>OUTPUT CONTRACT</span><span>NO-PROMPT → CONSTRAINTS</span><span>CONTINUITY</span><span>LIVE SCHEMA</span></div>
-      </div>
-
-      <article className="skill-output-card professional-output-card"><div className="skill-output-head"><div><span className="micro">{es ? 'PROMPT PROFESIONAL DEL DESTINO' : 'PROFESSIONAL TARGET PROMPT'}</span><strong>{compilation.target.label} · {activeOutput.label[language]}</strong></div><button className="icon-button" type="button" onClick={() => onCopy(compilation.providerPrompt)} aria-label="Copy target prompt"><Copy size={15}/></button></div><pre>{compilation.providerPrompt}</pre><details className="output-package-details"><summary>{es ? 'Ver paquete de salida y restricciones' : 'View output package & constraints'}</summary><pre>{JSON.stringify({ parameters: compilation.parameterPack, constraints: compilation.constraintPack, output: compilation.outputProfile }, null, 2)}</pre></details></article>
-    </div>
-
-    <div className="quality-gates professional-gates">
-      {compilation.quality.gates.map((gate) => <div className={gate.passed ? 'quality-gate pass' : 'quality-gate fail'} key={`core-${gate.id}`}><ShieldCheck size={14}/><div><strong>{localizedGateLabel(gate.id, gate.label, es)}</strong><span>{gate.detail}</span></div></div>)}
-      {compilation.professionalQuality.gates.map((gate) => <div className={gate.passed ? 'quality-gate pass pro' : 'quality-gate fail pro'} key={`pro-${gate.id}`}><PackageCheck size={14}/><div><strong>{localizedGateLabel(gate.id, gate.label, es)}</strong><span>{gate.detail}</span></div></div>)}
-    </div>
-    {[...compilation.quality.warnings, ...compilation.professionalQuality.warnings].length > 0 && <div className="skill-warning-list">{[...compilation.quality.warnings, ...compilation.professionalQuality.warnings].map((warning, index) => <p key={`${warning}-${index}`}><Sparkles size={13}/>{localizedWarning(warning, es)}</p>)}</div>}
+    <div className="quality-gates">{compilation.quality.gates.map((gate) => <div className={gate.passed ? 'quality-gate pass' : 'quality-gate fail'} key={gate.id}><ShieldCheck size={14}/><div><strong>{gateLabel(gate.id, gate.label, es)}</strong><span>{gate.detail}</span></div></div>)}</div>
+    {compilation.quality.warnings.length > 0 && <div className="skill-warning-list">{compilation.quality.warnings.map((warning) => <p key={warning}><Sparkles size={13}/>{localWarning(warning, es)}</p>)}</div>}
 
     {HIGGSFIELD_TARGETS.includes(target) && <section className="live-provider-card">
-      <div className="live-provider-head"><div><span className="micro">HIGGSFIELD · OFFICIAL CLI BRIDGE</span><strong>{desktop ? (desktopStatus?.installed ? (es ? 'Desktop conectado' : 'Desktop connected') : (es ? 'CLI por verificar' : 'CLI check required')) : (es ? 'Ejecución disponible en Desktop' : 'Execution available in Desktop')}</strong><p>{desktop ? (desktopStatus?.installed ? `${desktopStatus.version || 'Higgsfield CLI'} · ${desktopStatus.binary || ''}` : desktopStatus?.error || (es ? 'Presiona actualizar para detectar el CLI.' : 'Refresh to detect the CLI.')) : (es ? 'La PWA compila prompts; para ejecutar el proveedor usa la app macOS, donde las credenciales permanecen fuera del proyecto.' : 'The PWA compiles prompts; use the macOS app for provider execution so credentials stay outside the project.')}</p></div><button className="subtle-button" type="button" disabled={!desktop || providerBusy} onClick={() => void refreshModels()}><RefreshCw size={14}/>{es ? 'Descubrir modelos' : 'Discover models'}</button></div>
-
-      {desktop && <div className="live-provider-grid"><label><span>{es ? 'Modelo en vivo' : 'Live model'}</span><div className="live-model-row"><select value={modelId} onChange={(event) => void inspectModel(event.target.value)}><option value="">{es ? 'Selecciona del catálogo…' : 'Select from live catalog…'}</option>{liveModels.map((model) => <option value={model.id} key={model.id}>{model.name} · {model.id}</option>)}</select><input value={modelId} onChange={(event) => void inspectModel(event.target.value)} placeholder="job_set_type / model id"/></div></label><label><span>{es ? 'Resolución (opcional)' : 'Resolution (optional)'}</span><input value={resolution} onChange={(event) => setResolution(event.target.value)} placeholder="1080p / 2k / provider default"/></label>{mode === 'image-to-video' && <label className="live-provider-wide"><span>{es ? 'Ruta local del primer fotograma' : 'Local first-frame path'}</span><input value={startImage} onChange={(event) => setStartImage(event.target.value)} placeholder="/Users/.../frame.png"/></label>}<div className="live-provider-wide provider-safety"><label><input type="checkbox" checked={confirmSpend} onChange={(event) => setConfirmSpend(event.target.checked)}/><span>{es ? 'Confirmo esta generación y acepto que puede consumir créditos del proveedor.' : 'I confirm this generation and understand it may consume provider credits.'}</span></label><div className="provider-action-row"><button className="subtle-button" type="button" disabled={providerBusy || !desktopStatus?.installed || !modelId} onClick={() => void validateSetup()}><CheckCircle2 size={14}/>{es ? 'Validar setup' : 'Validate setup'}</button><button className="primary-button" type="button" disabled={providerBusy || !desktopStatus?.installed || !modelId || !confirmSpend || compilation.professionalQuality.grade === 'D'} onClick={() => void generate()}><Play size={14}/>{providerBusy ? (es ? 'Procesando…' : 'Processing…') : (es ? 'Generar en Higgsfield' : 'Generate in Higgsfield')}</button></div></div></div>}
-
+      <div className="live-provider-head"><div><span className="micro">HIGGSFIELD · OFFICIAL CLI BRIDGE</span><strong>{desktop ? (desktopStatus?.installed ? (es ? 'Desktop conectado' : 'Desktop connected') : (es ? 'CLI por verificar' : 'CLI check required')) : (es ? 'Ejecución disponible en Desktop' : 'Execution available in Desktop')}</strong><p>{desktop ? (desktopStatus?.installed ? `${desktopStatus.version || 'Higgsfield CLI'} · ${desktopStatus.binary || ''}` : desktopStatus?.error || (es ? 'Presiona actualizar para detectar el CLI.' : 'Refresh to detect the CLI.')) : (es ? 'La PWA compila prompts. Para ejecución con credenciales usa Desktop.' : 'The PWA compiles prompts. Use Desktop for credentialed provider execution.')}</p></div><button className="subtle-button" type="button" disabled={!desktop || providerBusy} onClick={() => void refreshModels()}><RefreshCw size={14}/>{es ? 'Descubrir modelos' : 'Discover models'}</button></div>
+      {desktop && <div className="live-provider-grid"><label><span>{es ? 'Modelo en vivo' : 'Live model'}</span><div className="live-model-row"><select value={modelId} onChange={(event) => void inspectModel(event.target.value)}><option value="">{es ? 'Selecciona del catálogo…' : 'Select from live catalog…'}</option>{liveModels.map((model) => <option value={model.id} key={model.id}>{model.name} · {model.id}</option>)}</select><input value={modelId} onChange={(event) => void inspectModel(event.target.value)} placeholder="job_set_type / model id"/></div></label><label><span>{es ? 'Resolución (opcional)' : 'Resolution (optional)'}</span><input value={resolution} onChange={(event) => setResolution(event.target.value)} placeholder="1080p / 2k / provider default"/></label>{mode === 'image-to-video' && <label className="live-provider-wide"><span>{es ? 'Ruta local del primer fotograma' : 'Local first-frame path'}</span><input value={startImage} onChange={(event) => setStartImage(event.target.value)} placeholder="/Users/.../frame.png"/></label>}<div className="live-provider-wide provider-safety"><label><input type="checkbox" checked={confirmSpend} onChange={(event) => setConfirmSpend(event.target.checked)}/><span>{es ? 'Confirmo esta generación y acepto que puede consumir créditos del proveedor.' : 'I confirm this generation and understand it may consume provider credits.'}</span></label><div className="provider-action-row"><button className="subtle-button" type="button" disabled={providerBusy || !desktopStatus?.installed || !modelId} onClick={() => void validateSetup()}><CheckCircle2 size={14}/>{es ? 'Validar setup' : 'Validate setup'}</button><button className="primary-button" type="button" disabled={providerBusy || !desktopStatus?.installed || !modelId || !confirmSpend || compilation.quality.grade === 'D'} onClick={() => void generate()}><Play size={14}/>{providerBusy ? (es ? 'Procesando…' : 'Processing…') : (es ? 'Generar en Higgsfield' : 'Generate in Higgsfield')}</button></div></div></div>}
       {desktop && !desktopStatus?.installed && <div className="provider-install-note"><code>brew install higgsfield-ai/tap/higgsfield</code><code>higgsfield auth login</code></div>}
       {providerMessage && <p className="provider-message">{providerMessage}</p>}
       {preflight?.plan && <details className="provider-schema" open><summary>{es ? 'Preflight · parámetros que Vision enviará' : 'Preflight · parameters Vision will submit'}</summary><pre>{JSON.stringify(preflight.plan, null, 2)}</pre></details>}
@@ -355,6 +266,6 @@ export function GenerationSkillPanel({
       {providerResult != null && <details className="provider-schema" open><summary>{es ? 'Resultado del trabajo' : 'Job result'}</summary><pre>{JSON.stringify(providerResult, null, 2)}</pre></details>}
     </section>}
 
-    <div className="skill-foot"><span><ImageIcon size={13}/>{normalizedRefs.length} {es ? 'referencias con rol' : 'role-tagged references'}</span><span><Film size={13}/>{compilation.timeline.length} {es ? 'beats temporales' : 'temporal beats'}</span><span>{compilation.provenance.slice(0, 8).join(' · ')}</span></div>
+    <div className="skill-foot"><span><ImageIcon size={13}/>{normalizedRefs.length} {es ? 'referencias con rol' : 'role-tagged references'}</span><span><Film size={13}/>{compilation.timeline.length} {es ? 'beats temporales' : 'temporal beats'}</span><span>{compilation.provenance.slice(0, 7).join(' · ')}</span></div>
   </section>;
 }
