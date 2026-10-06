@@ -12,11 +12,13 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
       - run: npm install
       - run: npm run typecheck
       - run: npm run build:web
       - run: npm run vision:typecheck
+      - run: npm run vision:smoke
+      - run: npm run vision:mcp:smoke
       - run: npm run vision:build
 
   desktop-macos:
@@ -25,7 +27,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
       - uses: dtolnay/rust-toolchain@stable
       - run: npm install
       - run: chmod +x scripts/*.sh
@@ -39,11 +41,13 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
       - uses: dtolnay/rust-toolchain@stable
       - run: npm install
       - run: chmod +x scripts/*.sh
       - run: npm run vision:typecheck
+      - run: npm run vision:smoke
+      - run: npm run vision:mcp:smoke
       - run: npm run vision:build
       - run: npm run vision:desktop:check
       - run: npm run vision:desktop:build
