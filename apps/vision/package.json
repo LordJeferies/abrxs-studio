@@ -7,10 +7,11 @@
     "dev": "vite --host 127.0.0.1 --port 4174",
     "build": "tsc -b && vite build",
     "typecheck": "tsc -b",
-    "desktop:dev": "tauri dev",
-    "desktop:check": "cargo check --manifest-path src-tauri/Cargo.toml",
-    "desktop:build": "tauri build",
-    "icon": "tauri icon src-tauri/icons/app-icon.svg"
+    "icon": "tauri icon src-tauri/icons/app-icon.svg",
+    "desktop:prepare": "npm run icon",
+    "desktop:dev": "npm run desktop:prepare && tauri dev",
+    "desktop:check": "npm run desktop:prepare && cargo check --manifest-path src-tauri/Cargo.toml",
+    "desktop:build": "npm run desktop:prepare && tauri build"
   },
   "dependencies": {
     "@abrxs/design-system": "0.1.0",
