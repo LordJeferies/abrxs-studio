@@ -1,4 +1,5 @@
 import type { DirectorState } from './promptEngine';
+import { deriveSceneStructure, type SceneStructureSpec } from './sceneEngine';
 import {
   compileSkillPrompt,
   type GenerationIntent,
@@ -30,6 +31,7 @@ export type ShotSpec = {
   promptHint: string;
   continuityKey: string;
   sceneGoal: string;
+  sceneStructure: SceneStructureSpec;
 };
 
 export type StoryboardSpec = {
@@ -39,10 +41,12 @@ export type StoryboardSpec = {
   sceneCount: number;
   shotsPerScene: number;
   shots: ShotSpec[];
+  sceneStructures: SceneStructureSpec[];
+  readinessScore: number;
   continuityContract: string[];
 };
 
-type ShotPattern = Omit<ShotSpec, 'id' | 'scene' | 'shot' | 'continuityKey' | 'sceneGoal'>;
+type ShotPattern = Omit<ShotSpec, 'id' | 'scene' | 'shot' | 'continuityKey' | 'sceneGoal' | 'sceneStructure'>;
 
 export const storyboardGrammars: Array<{
   id: StoryboardGrammarId;
@@ -161,8 +165,10 @@ export function generateStoryboard(
   const scenes = Math.max(1, Math.min(12, Math.round(sceneCount)));
   const perScene = Math.max(1, Math.min(12, Math.round(shotsPerScene)));
   const shots: ShotSpec[] = [];
+  const sceneStructures = Array.from({ length: scenes }, (_, index) => deriveSceneStructure(idea, director, index + 1, scenes));
 
   for (let scene = 1; scene <= scenes; scene += 1) {
+    const sceneStructure = sceneStructures[scene - 1];
     for (let shot = 1; shot <= perScene; shot += 1) {
       const pattern = grammar.pattern[(shot - 1) % grammar.pattern.length];
       shots.push({
@@ -171,12 +177,14 @@ export function generateStoryboard(
         scene,
         shot,
         continuityKey: `scene-${scene}:${director.subject}:${director.environment}:${director.palette}`,
-        sceneGoal: `Advance scene ${scene} of “${idea}” through the ${pattern.narrativeRole.toLowerCase()} beat without resetting identity, geography or visual logic.`,
-        promptHint: `${pattern.promptHint}; visual story context: ${idea}; preserve ${director.style.toLowerCase()} and ${director.lighting.toLowerCase()}`,
+        sceneGoal: sceneStructure.promptContext,
+        sceneStructure,
+        promptHint: `${pattern.promptHint}; visual story context: ${idea}; structural phase: ${sceneStructure.phase}; preserve ${director.style.toLowerCase()} and ${director.lighting.toLowerCase()}`,
       });
     }
   }
 
+  const readinessScore = Math.round(sceneStructures.reduce((total, structure) => total + structure.readinessScore, 0) / sceneStructures.length);
   return {
     id: `storyboard-${grammar.id}`,
     title: idea || 'Untitled storyboard',
@@ -184,6 +192,8 @@ export function generateStoryboard(
     sceneCount: scenes,
     shotsPerScene: perScene,
     shots,
+    sceneStructures,
+    readinessScore,
     continuityContract: [
       `Identity: ${director.subject}`,
       `Location: ${director.environment}`,
@@ -206,16 +216,17 @@ export function compileShotPackage(
     : /speaker|two-shot/i.test(shot.narrativeRole)
       ? 'dialogue'
       : 'cinematic';
+  const resolvedStructure = shot.sceneStructure.promptContext;
   return compileSkillPrompt({
     director: {
       ...director,
-      idea: `${idea}. ${shot.sceneGoal}`,
+      idea: `${idea}. Scene structure: ${resolvedStructure}`,
       framing: shot.framing,
       focal: shot.focal,
       angle: shot.angle,
       movement: shot.movement,
       action: `${director.action}. Shot purpose: ${shot.promptHint}`,
-      visualFunction: `${shot.narrativeRole}: ${shot.promptHint}`,
+      visualFunction: `${shot.narrativeRole}: ${shot.promptHint}. Structural purpose: ${resolvedStructure}`,
       continuity: `${director.continuity ?? ''} Storyboard continuity key: ${shot.continuityKey}`.trim(),
     },
     mode: 'text-to-video',
