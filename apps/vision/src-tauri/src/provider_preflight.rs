@@ -20,7 +20,8 @@ pub fn schema_mentions(value: &Value, parameter: &str) -> bool {
             let normalized = normalized_token(text);
             normalized == target
                 || normalized.contains(&format!("--{target}"))
-                || normalized.split(|character: char| !character.is_ascii_alphanumeric() && character != '_')
+                || normalized
+                    .split(|character: char| !character.is_ascii_alphanumeric() && character != '_')
                     .any(|token| token == target)
         }
         _ => false,
@@ -46,12 +47,13 @@ pub fn resolve_media_input(raw: &str) -> Result<String, String> {
         || trimmed.contains("/Users/");
 
     if !path_like {
-        // The official CLI also accepts upload/job/media ids. Leave opaque ids untouched.
+        // Official Higgsfield CLI media inputs may also be upload/job/media IDs.
         return Ok(trimmed.to_string());
     }
 
     let path = if let Some(rest) = trimmed.strip_prefix("~/") {
-        let home = env::var_os("HOME").ok_or_else(|| "HOME is not available to expand the media path.".to_string())?;
+        let home = env::var_os("HOME")
+            .ok_or_else(|| "HOME is not available to expand the media path.".to_string())?;
         PathBuf::from(home).join(rest)
     } else {
         PathBuf::from(trimmed)
@@ -78,41 +80,47 @@ pub fn build_optional_args(
     let mut warnings = Vec::<String>::new();
 
     if let Some(value) = aspect_ratio.filter(|value| !value.trim().is_empty()) {
-        if !introspectable || schema_mentions(schema, "aspect_ratio") {
+        if introspectable && schema_mentions(schema, "aspect_ratio") {
             args.push("--aspect_ratio".into());
             args.push(value.clone());
             applied.push(json!({ "parameter": "aspect_ratio", "value": value }));
         } else {
-            omitted.push(json!({ "parameter": "aspect_ratio", "value": value, "reason": "not present in live model schema" }));
-            warnings.push("The selected model does not advertise aspect_ratio; Vision will let the provider use its model default.".into());
+            let reason = if introspectable { "not present in live model schema" } else { "live schema could not be interpreted safely" };
+            omitted.push(json!({ "parameter": "aspect_ratio", "value": value, "reason": reason }));
+            warnings.push("Vision will not send aspect_ratio because support was not confirmed by the live model schema.".into());
         }
     }
 
     if let Some(value) = duration.filter(|value| *value >= 1 && *value <= 120) {
-        if !introspectable || schema_mentions(schema, "duration") {
+        if introspectable && schema_mentions(schema, "duration") {
             args.push("--duration".into());
             args.push(value.to_string());
             applied.push(json!({ "parameter": "duration", "value": value }));
         } else {
-            omitted.push(json!({ "parameter": "duration", "value": value, "reason": "not present in live model schema" }));
-            warnings.push("The selected model does not advertise duration; Vision will not send an unsupported duration flag.".into());
+            let reason = if introspectable { "not present in live model schema" } else { "live schema could not be interpreted safely" };
+            omitted.push(json!({ "parameter": "duration", "value": value, "reason": reason }));
+            warnings.push("Vision will not send duration because support was not confirmed by the live model schema.".into());
         }
     }
 
     if let Some(value) = resolution.filter(|value| !value.trim().is_empty()) {
-        if !introspectable || schema_mentions(schema, "resolution") {
+        if introspectable && schema_mentions(schema, "resolution") {
             args.push("--resolution".into());
             args.push(value.clone());
             applied.push(json!({ "parameter": "resolution", "value": value }));
         } else {
-            omitted.push(json!({ "parameter": "resolution", "value": value, "reason": "not present in live model schema" }));
-            warnings.push("The selected model does not advertise resolution; Vision will not send an unsupported resolution flag.".into());
+            let reason = if introspectable { "not present in live model schema" } else { "live schema could not be interpreted safely" };
+            omitted.push(json!({ "parameter": "resolution", "value": value, "reason": reason }));
+            warnings.push("Vision will not send resolution because support was not confirmed by the live model schema.".into());
         }
     }
 
     if let Some(value) = start_image.filter(|value| !value.trim().is_empty()) {
+        if !introspectable {
+            return Err("The live model schema could not be interpreted safely, so Vision will not submit a media input blindly.".into());
+        }
         let resolved = resolve_media_input(&value)?;
-        let flag = if !introspectable || schema_mentions(schema, "start_image") {
+        let flag = if schema_mentions(schema, "start_image") {
             "--start-image"
         } else if schema_mentions(schema, "image") {
             "--image"
@@ -133,4 +141,68 @@ pub fn build_optional_args(
             "warnings": warnings,
         }),
     ))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn detects_parameters_in_nested_schema() {
+        let schema = json!({
+            "input": {
+                "properties": {
+                    "prompt": { "type": "string" },
+                    "aspect_ratio": { "enum": ["16:9", "9:16"] },
+                    "duration": { "type": "integer" },
+                    "image": { "type": "media" }
+                }
+            }
+        });
+        assert!(schema_is_introspectable(&schema));
+        assert!(schema_mentions(&schema, "aspect_ratio"));
+        assert!(schema_mentions(&schema, "image"));
+        assert!(!schema_mentions(&schema, "resolution"));
+    }
+
+    #[test]
+    fn omits_unconfirmed_optional_flags() {
+        let schema = json!({ "properties": { "prompt": {}, "duration": {} } });
+        let (args, plan) = build_optional_args(
+            &schema,
+            Some("16:9".into()),
+            Some(5),
+            None,
+            Some("1080p".into()),
+        ).expect("preflight should succeed");
+        assert_eq!(args, vec!["--duration", "5"]);
+        assert_eq!(plan["applied"].as_array().map(|items| items.len()), Some(1));
+        assert_eq!(plan["omitted"].as_array().map(|items| items.len()), Some(2));
+    }
+
+    #[test]
+    fn accepts_opaque_media_id_for_supported_image_input() {
+        let schema = json!({ "properties": { "prompt": {}, "image": {} } });
+        let (args, _) = build_optional_args(
+            &schema,
+            None,
+            None,
+            Some("media_12345".into()),
+            None,
+        ).expect("opaque provider media id should be accepted");
+        assert_eq!(args, vec!["--image", "media_12345"]);
+    }
+
+    #[test]
+    fn blocks_media_when_schema_is_not_interpretable() {
+        let schema = json!({ "name": "unknown-model", "metadata": { "version": 3 } });
+        let error = build_optional_args(
+            &schema,
+            None,
+            None,
+            Some("media_12345".into()),
+            None,
+        ).expect_err("blind media submission must be blocked");
+        assert!(error.contains("could not be interpreted safely"));
+    }
 }
