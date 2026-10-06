@@ -2,6 +2,11 @@ import type { DirectorState } from './promptEngine';
 
 export type ConstraintStrategy = 'positive-only' | 'positive-first' | 'separate-negative';
 
+export type ConstraintBrief = {
+  mustAvoid?: string;
+  literalText?: string;
+};
+
 export type ConstraintPack = {
   strategy: ConstraintStrategy;
   positive: string[];
@@ -19,13 +24,10 @@ const splitItems = (value: string | undefined) => (value ?? '')
 function strategyForTarget(target: string): ConstraintStrategy {
   if (target === 'comfyui') return 'separate-negative';
   if (target === 'generic-production') return 'positive-first';
-  // Higgsfield / Seedance / Cinema-style workflows are safer when exclusions are
-  // translated into an explicit desired state instead of blindly appending "no X".
-  // NVIDIA/Gemini remain positive-first until the connected model schema says otherwise.
   return 'positive-only';
 }
 
-function commonPositive(state: DirectorState, video: boolean) {
+function commonPositive(state: DirectorState, video: boolean, literalText?: string) {
   const items = [
     'anatomically coherent people with stable body proportions and naturally resolved hands',
     'subject identity and facial proportions remain stable across the output',
@@ -42,7 +44,7 @@ function commonPositive(state: DirectorState, video: boolean) {
       'motion remains smooth and temporally continuous without sudden geometry resets',
     );
   }
-  if (state.literalText?.trim()) items.push('literal typography must remain readable and exact; if the selected model cannot guarantee text fidelity, deliver the image clean and place type as a separate layer');
+  if (literalText?.trim()) items.push('literal typography must remain readable and exact; if the selected model cannot guarantee text fidelity, deliver the image clean and place type as a separate layer');
   return items;
 }
 
@@ -69,11 +71,11 @@ function translateAvoidance(item: string, state: DirectorState) {
   return match?.positive(state) ?? '';
 }
 
-export function compileConstraintPack(state: DirectorState, target: string, mode: string): ConstraintPack {
+export function compileConstraintPack(state: DirectorState, target: string, mode: string, brief: ConstraintBrief = {}): ConstraintPack {
   const strategy = strategyForTarget(target);
   const video = mode.includes('video');
-  const userAvoid = splitItems(state.mustAvoid);
-  const positive = commonPositive(state, video);
+  const userAvoid = splitItems(brief.mustAvoid);
+  const positive = commonPositive(state, video, brief.literalText);
   const unresolved: string[] = [];
 
   for (const item of userAvoid) {
