@@ -9,11 +9,17 @@ The repository is developed as a **modular monorepo**: every production tool mus
 Vision is the first production module promoted to the V2 architecture.
 
 - **Public PWA:** https://lordjeferies.github.io/abrxs-studio/vision/
+- **Public product page:** https://lordjeferies.github.io/abrxs-studio/vision/about.html
 - **How to use Vision:** https://lordjeferies.github.io/abrxs-studio/vision/guide.html
+- **Latest macOS release:** https://github.com/LordJeferies/abrxs-studio/releases/latest
+- **Direct macOS download:** https://github.com/LordJeferies/abrxs-studio/releases/latest/download/Abrxs-Vision-Art-Creator-macOS.zip
 - **Vision source/docs:** `apps/vision/README.md`
-- **Vision V2 architecture:** `apps/vision/docs/VISION_V2_ARCHITECTURE.md`
+- **Vision V2 architecture:** `docs/vision/ARCHITECTURE_V2.md`
+- **Vision MCP:** `docs/vision/MCP.md`
 
 Vision V2 is **PWA-first**: Prompt Studio, Ficha Intake, XRoll planning, Director, Carousel, Storyboard, local analysis and project/prompt work are intended to be fast, installable and useful from browser/iPhone/iPad/desktop. The existing Tauri build remains an optional wrapper for native capabilities such as Keychain, filesystem workflows, FFmpeg, large-video processing and local provider/model bridges.
+
+Vision Copilot can run through secure native adapters on Desktop or through the optional Firebase/Cloud Gateway from the PWA. The public frontend never needs to contain master provider API keys.
 
 ## Vision V2 core flow
 
@@ -59,7 +65,8 @@ No product should depend on GitHub Pages to perform a desktop-only native operat
 ## Planned / active modules
 
 - **Vision V2** — Prompt Studio, professional compiler, Ficha Intake, XRoll Studio, Carousel, Storyboard, Analyze, references/continuity, provider registry, PWA + optional Tauri.
-- **Dresser** — next standalone production tool: Auto Dress, captions, B-roll, XRoll compositing, layers, motion, reframe, audio, timeline and export.
+- **XRollsArchitect** — next visual-creation app after Vision V2: specialized XRoll layer architecture, depth, parallax, motion, local/cloud generation and Dresser handoff.
+- **Dresser** — Auto Dress, captions, B-roll, XRoll compositing, layers, motion, reframe, audio, timeline and export.
 - **Brand** — Brand Adapter + Vision DNA / BrandVisionProfile.
 - **Content** — content routing, Beta/Alfa/Omega, Visual Intent and Vision Content Bridge.
 - **Fichas** — canonical ficha editing, provenance, validation and visual production.
@@ -87,6 +94,7 @@ npm install
 npm run vision:typecheck
 npm run vision:smoke
 npm run vision:v2:smoke
+npm run vision:assistant:smoke
 npm run vision:mcp:smoke
 npm run vision:pro:mcp:smoke
 npm run vision:build
@@ -105,6 +113,14 @@ npm run vision:desktop:check
 npm run vision:desktop:build
 ```
 
+One-command macOS finalize/build/install:
+
+```bash
+bash scripts/vision-v2-finalize-mac.sh
+```
+
+The script also registers the local MCP launcher with Codex/Claude Code when those CLIs are installed and requests the `Vision V2 Release` workflow when GitHub CLI is authenticated.
+
 ## Development rules
 
 1. Stabilize each app independently before joining the final Studio shell.
@@ -120,4 +136,4 @@ npm run vision:desktop:build
 11. Legacy compatibility is implemented through parsers/adapters/fixtures, not stacked runtime patches.
 12. Changes to imported production documents should be auditable and reversible.
 
-See `docs/architecture/FOUNDATION.md`, `docs/architecture/PLATFORM_TARGETS.md`, `docs/architecture/FRONTEND_SYSTEM_V1.md`, `docs/roadmap/PHASES.md` and `apps/vision/docs/VISION_V2_ARCHITECTURE.md`.
+See `docs/architecture/FOUNDATION.md`, `docs/architecture/PLATFORM_TARGETS.md`, `docs/architecture/FRONTEND_SYSTEM_V1.md`, `docs/roadmap/PHASES.md`, `docs/vision/ARCHITECTURE_V2.md` and `docs/vision/MCP.md`.
