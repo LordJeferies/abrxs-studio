@@ -1,7 +1,7 @@
 import { BookOpen, Bot, Clapperboard, FileUp, Image as ImageIcon, Layers3, Settings2, Sparkles, WandSparkles } from 'lucide-react';
 import { useState } from 'react';
 import { CinemaPlayground } from './CinemaPlayground';
-import { DirectorPromptStudio } from './DirectorPromptStudio';
+import { DirectorPromptStudioV25 } from './DirectorPromptStudioV25';
 import { FichaIntakePanel } from './FichaIntakePanel';
 import { useVisionI18n } from './i18n';
 import { ProfessionalPromptLab } from './ProfessionalPromptLab';
@@ -30,10 +30,10 @@ export function VisionV2Shell() {
         <div className="v2-hero">
           <span className="micro">VISION V2.5 · DIRECTOR STUDIO</span>
           <h1>{es ? 'Escribe la idea. Vision dirige.' : 'Write the idea. Vision directs.'}</h1>
-          <p>{es ? 'Un mejorador y director visual: pega un prompt normal, entiende qué significa cada decisión, elige referencias cinematográficas y deja que Vision lo convierta en una especificación ABRAXAS profesional sin perder tu intención.' : 'A visual prompt improver and director: paste a normal prompt, understand every visual decision, choose cinematic references and let Vision turn it into a professional ABRAXAS specification without losing your intent.'}</p>
+          <p>{es ? 'Un mejorador y director visual: pega el texto base de una imagen, video o XR; selecciona decisiones cinematográficas viendo referencias; y deja que Vision construya un prompt ABRAXAS profesional sin perder la intención original.' : 'A visual prompt improver and director: paste the base text for an image, video or XR; choose cinematic decisions through visual references; and let Vision build a professional ABRAXAS prompt without losing the original intent.'}</p>
         </div>
         <div className="v2-primary-actions">
-          <button className="v2-choice primary" type="button" onClick={() => setView('prompt')}><div className="v2-choice-icon"><WandSparkles size={28}/></div><div><span className="micro">VISION DIRECTOR</span><strong>{es ? 'Crear / mejorar / dirigir prompts' : 'Create / improve / direct prompts'}</strong><p>{es ? 'Editor normal + Prompt Anatomy + referencias visuales de lente, luz, composición, movimiento, look y FX.' : 'Normal editor + Prompt Anatomy + visual references for lens, light, composition, movement, look and FX.'}</p></div><i>→</i></button>
+          <button className="v2-choice primary" type="button" onClick={() => setView('prompt')}><div className="v2-choice-icon"><WandSparkles size={28}/></div><div><span className="micro">VISION DIRECTOR</span><strong>{es ? 'Texto base → prompt dirigido' : 'Base text → directed prompt'}</strong><p>{es ? 'Cámara, lente, foco, composición, iluminación, movimiento, look, atmósfera y FX con referencias, presets y explicaciones.' : 'Camera, lens, focus, composition, lighting, movement, look, atmosphere and FX with references, presets and explanations.'}</p></div><i>→</i></button>
           <button className="v2-choice" type="button" onClick={() => setView('assistant')}><div className="v2-choice-icon"><Bot size={28}/></div><div><span className="micro">VISION COPILOT</span><strong>{es ? 'Pensar y dirigir con IA' : 'Think and direct with AI'}</strong><p>{es ? 'NVIDIA NIM o Gemini para revisar, explicar y proponer patches que tú apruebas.' : 'NVIDIA NIM or Gemini to review, explain and propose patches that you approve.'}</p></div><i>→</i></button>
         </div>
         <div className="v2-secondary-actions">
@@ -51,7 +51,7 @@ export function VisionV2Shell() {
     <header className="v2-switcher">
       <button className="v2-logo" type="button" onClick={() => setView('home')}><span>V</span><div><strong>Vision V2.5</strong><small>Director Studio</small></div></button>
       <nav>
-        <button className={view === 'prompt' ? 'active' : ''} type="button" onClick={() => setView('prompt')}><WandSparkles size={15}/>{es ? 'Director' : 'Director'}</button>
+        <button className={view === 'prompt' ? 'active' : ''} type="button" onClick={() => setView('prompt')}><WandSparkles size={15}/>Director</button>
         <button className={view === 'assistant' ? 'active' : ''} type="button" onClick={() => setView('assistant')}><Bot size={15}/>Copilot</button>
         <button className={view === 'ficha' ? 'active' : ''} type="button" onClick={() => setView('ficha')}><FileUp size={15}/>Fichas</button>
         <button className={view === 'xroll' ? 'active' : ''} type="button" onClick={() => setView('xroll')}><Layers3 size={15}/>XRoll</button>
@@ -63,9 +63,9 @@ export function VisionV2Shell() {
 
     <main className="v2-workspace">
       {view === 'prompt' && <div className="v25-prompt-route">
-        <DirectorPromptStudio language={language} onOpenCopilot={() => setView('assistant')} onOpenStudio={() => setView('studio')}/>
+        <DirectorPromptStudioV25 language={language} onOpenCopilot={() => setView('assistant')} onOpenStudio={() => setView('studio')}/>
         <details className="v25-advanced-compiler">
-          <summary><Sparkles size={15}/><span><strong>{es ? 'Compilador avanzado ABRAXAS' : 'Advanced ABRAXAS compiler'}</strong><small>{es ? 'Mantiene las herramientas profesionales de V2: brief estructurado, target compiler y Prompt Anatomy por bloques.' : 'Keeps V2 professional tools: structured brief, target compiler and block Prompt Anatomy.'}</small></span></summary>
+          <summary><Sparkles size={15}/><span><strong>{es ? 'Compilador avanzado ABRAXAS' : 'Advanced ABRAXAS compiler'}</strong><small>{es ? 'Herramientas V2 conservadas: brief estructurado, target compiler y Prompt Anatomy por bloques.' : 'Preserved V2 tools: structured brief, target compiler and block Prompt Anatomy.'}</small></span></summary>
           <div className="v2-prompt-workspace"><div className="v2-prompt-tools"><ProfessionalPromptLab/></div><PromptAnatomy language={language} onCopy={copy}/></div>
         </details>
       </div>}
