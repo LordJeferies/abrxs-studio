@@ -1,6 +1,7 @@
 import { BookOpen, Bot, Clapperboard, FileUp, Image as ImageIcon, Layers3, Settings2, Sparkles, WandSparkles } from 'lucide-react';
 import { useState } from 'react';
 import { CinemaPlayground } from './CinemaPlayground';
+import { CustomProviderSettings } from './CustomProviderSettings';
 import { DirectorStudioFinal } from './DirectorStudioFinal';
 import { FichaIntakePanel } from './FichaIntakePanel';
 import { useVisionI18n } from './i18n';
@@ -70,7 +71,7 @@ export function VisionV2Shell() {
         </details>
       </div>}
       {view === 'assistant' && <VisionCopilot language={language} onOpenSettings={() => setView('settings')} onOpenPromptStudio={() => setView('prompt')} onOpenXRoll={() => setView('xroll')}/>} 
-      {view === 'settings' && <div className="vision-v2-settings-stack"><VisionAISettings language={language}/><VisionFirebaseSettings language={language}/></div>} 
+      {view === 'settings' && <div className="vision-v2-settings-stack"><VisionAISettings language={language}/><CustomProviderSettings language={language}/><VisionFirebaseSettings language={language}/></div>} 
       {view === 'ficha' && <FichaIntakePanel language={language} onCopy={copy}/>} 
       {view === 'xroll' && <XRollStudio language={language} onCopy={copy}/>} 
       {view === 'learn' && <CinemaPlayground language={language}/>} 
