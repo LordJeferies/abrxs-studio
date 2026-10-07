@@ -1,4 +1,4 @@
-name: Vision V2 Release
+name: Vision V2.5 Release
 
 on:
   workflow_dispatch:
@@ -29,36 +29,37 @@ jobs:
       - run: npm run vision:typecheck
       - run: npm run vision:smoke
       - run: npm run vision:v2:smoke
+      - run: npm run vision:v25:smoke
       - run: npm run vision:assistant:smoke
       - run: npm run vision:mcp:smoke
       - run: npm run vision:pro:mcp:smoke
       - run: npm run vision:build
       - run: npm run vision:desktop:check
       - run: npm run vision:desktop:build
-      - name: Package Vision V2
+      - name: Package Vision V2.5
         run: |
           APP="$(find apps/vision/src-tauri/target/release/bundle/macos -maxdepth 1 -name '*.app' -print -quit)"
           test -n "$APP"
           mkdir -p dist/vision
-          ditto -c -k --sequesterRsrc --keepParent "$APP" dist/vision/Abrxs-Vision-Art-Creator-macOS.zip
-          shasum -a 256 dist/vision/Abrxs-Vision-Art-Creator-macOS.zip > dist/vision/Abrxs-Vision-Art-Creator-macOS.sha256
+          ditto -c -k --sequesterRsrc --keepParent "$APP" dist/vision/Abrxs-Vision-Art-Creator-macOS-v2.5.zip
+          shasum -a 256 dist/vision/Abrxs-Vision-Art-Creator-macOS-v2.5.zip > dist/vision/Abrxs-Vision-Art-Creator-macOS-v2.5.sha256
       - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_NOTE: ${{ inputs.notes }}
         run: |
-          TAG="vision-v2.${GITHUB_RUN_NUMBER}"
-          NOTE="Abrxs Vision Art Creator V2 stable build from ${GITHUB_SHA}."
+          TAG="vision-v2.5.${GITHUB_RUN_NUMBER}"
+          NOTE="Abrxs Vision V2.5 Director Studio stable build from ${GITHUB_SHA}. Base text → directed prompt, visual cinema selectors, suggested presets, V2 core, Fichas, XRoll, Copilot and MCP preserved."
           if [ -n "${RELEASE_NOTE:-}" ]; then NOTE="$NOTE\n\n$RELEASE_NOTE"; fi
           gh release create "$TAG" \
-            dist/vision/Abrxs-Vision-Art-Creator-macOS.zip \
-            dist/vision/Abrxs-Vision-Art-Creator-macOS.sha256 \
+            dist/vision/Abrxs-Vision-Art-Creator-macOS-v2.5.zip \
+            dist/vision/Abrxs-Vision-Art-Creator-macOS-v2.5.sha256 \
             --target "$GITHUB_SHA" \
-            --title "Abrxs Vision V2 · build ${GITHUB_RUN_NUMBER}" \
+            --title "Abrxs Vision V2.5 Director Studio · build ${GITHUB_RUN_NUMBER}" \
             --notes "$NOTE" \
             --latest
       - uses: actions/upload-artifact@v4
         with:
-          name: Abrxs-Vision-Art-Creator-macOS
+          name: Abrxs-Vision-Art-Creator-macOS-v2.5
           path: dist/vision/*
           if-no-files-found: error
