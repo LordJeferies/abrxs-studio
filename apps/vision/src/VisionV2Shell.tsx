@@ -1,4 +1,4 @@
-import { BookOpen, Bot, Clapperboard, FileUp, Image as ImageIcon, Layers3, Play, Settings2, Sparkles, WandSparkles } from 'lucide-react';
+import { BookOpen, Bot, Clapperboard, FileUp, Image as ImageIcon, Layers3, Settings2, Sparkles, WandSparkles } from 'lucide-react';
 import { useState } from 'react';
 import { CinemaPlayground } from './CinemaPlayground';
 import { FichaIntakePanel } from './FichaIntakePanel';
@@ -8,6 +8,7 @@ import { PromptAnatomy } from './PromptAnatomy';
 import { VisionAISettings } from './VisionAISettings';
 import { VisionApp } from './VisionApp';
 import { VisionCopilot } from './VisionCopilot';
+import { VisionFirebaseSettings } from './VisionFirebaseSettings';
 import { XRollStudio } from './XRollStudio';
 
 type V2View = 'home' | 'prompt' | 'ficha' | 'xroll' | 'learn' | 'assistant' | 'settings' | 'studio';
@@ -32,7 +33,7 @@ export function VisionV2Shell() {
         </div>
         <div className="v2-primary-actions">
           <button className="v2-choice primary" type="button" onClick={() => setView('prompt')}><div className="v2-choice-icon"><WandSparkles size={28}/></div><div><span className="micro">PROMPT STUDIO</span><strong>{es ? 'Crear / mejorar prompts' : 'Create / improve prompts'}</strong><p>{es ? 'Desde cero, Prompt Anatomy o con dirección profesional ABRAXAS.' : 'From scratch, Prompt Anatomy or professional ABRAXAS direction.'}</p></div><i>→</i></button>
-          <button className="v2-choice" type="button" onClick={() => setView('assistant')}><div className="v2-choice-icon"><Bot size={28}/></div><div><span className="micro">VISION COPILOT</span><strong>{es ? 'Pensar y dirigir con IA' : 'Think and direct with AI'}</strong><p>{es ? 'NVIDIA NIM o Gemini CLI para revisar prompts, sugerir referencias y proponer cambios que tú apruebas.' : 'NVIDIA NIM or Gemini CLI to review prompts, suggest references and propose changes that you approve.'}</p></div><i>→</i></button>
+          <button className="v2-choice" type="button" onClick={() => setView('assistant')}><div className="v2-choice-icon"><Bot size={28}/></div><div><span className="micro">VISION COPILOT</span><strong>{es ? 'Pensar y dirigir con IA' : 'Think and direct with AI'}</strong><p>{es ? 'NVIDIA NIM o Gemini para revisar prompts, sugerir referencias y proponer cambios que tú apruebas.' : 'NVIDIA NIM or Gemini to review prompts, suggest references and propose changes that you approve.'}</p></div><i>→</i></button>
         </div>
         <div className="v2-secondary-actions">
           <button type="button" onClick={() => setView('studio')}><ImageIcon size={19}/><div><strong>{es ? 'Crear / generar' : 'Create / generate'}</strong><span>{es ? 'Imagen · video · storyboard' : 'Image · video · storyboard'}</span></div></button>
@@ -62,7 +63,7 @@ export function VisionV2Shell() {
     <main className="v2-workspace">
       {view === 'prompt' && <div className="v2-prompt-workspace"><div className="v2-prompt-tools"><div><span className="micro">PROMPT STUDIO</span><h1>{es ? 'Construye, entiende y mejora el prompt.' : 'Build, understand and improve the prompt.'}</h1><p>{es ? 'Prompt Anatomy separa el texto por función; Professional Prompt Lab compila el brief completo al target que elijas.' : 'Prompt Anatomy separates text by function; Professional Prompt Lab compiles the complete brief for your selected target.'}</p></div><ProfessionalPromptLab/></div><PromptAnatomy language={language} onCopy={copy}/></div>}
       {view === 'assistant' && <VisionCopilot language={language} onOpenSettings={() => setView('settings')} onOpenPromptStudio={() => setView('prompt')} onOpenXRoll={() => setView('xroll')}/>} 
-      {view === 'settings' && <VisionAISettings language={language}/>} 
+      {view === 'settings' && <div className="vision-v2-settings-stack"><VisionAISettings language={language}/><VisionFirebaseSettings language={language}/></div>} 
       {view === 'ficha' && <FichaIntakePanel language={language} onCopy={copy}/>} 
       {view === 'xroll' && <XRollStudio language={language} onCopy={copy}/>} 
       {view === 'learn' && <CinemaPlayground language={language}/>} 
