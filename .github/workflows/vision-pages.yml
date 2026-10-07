@@ -34,6 +34,7 @@ jobs:
       - run: npm run vision:v25:smoke
       - run: npm run vision:assistant:smoke
       - run: npm run vision:mcp:smoke
+      - run: npm run vision:director:mcp:smoke
       - run: npm run vision:pro:mcp:smoke
       - run: npm run vision:build:pages
       - name: Prepare Pages artifact
