@@ -7,7 +7,6 @@ on:
       - 'apps/vision/**'
       - 'packages/design-system/**'
       - 'package.json'
-      - 'package-lock.json'
       - '.github/workflows/vision-pages.yml'
   workflow_dispatch:
 
@@ -31,7 +30,9 @@ jobs:
       - run: npm install
       - run: npm run vision:typecheck
       - run: npm run vision:smoke
+      - run: npm run vision:v2:smoke
       - run: npm run vision:mcp:smoke
+      - run: npm run vision:pro:mcp:smoke
       - run: npm run vision:build:pages
       - name: Prepare Pages artifact
         run: |
