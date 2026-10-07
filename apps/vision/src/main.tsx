@@ -17,6 +17,7 @@ import './v25.css';
 import './v25director.css';
 import './v25technical.css';
 import './v25final.css';
+import './v25providers.css';
 import { VisionI18nProvider } from './i18n';
 import { registerVisionPwa } from './pwa';
 import { VisionV2Shell } from './VisionV2Shell';
