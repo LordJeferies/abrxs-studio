@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { CinemaPlaygroundFinal } from './CinemaPlaygroundFinal';
 import { CustomProviderSettings } from './CustomProviderSettings';
 import { DirectorStudioFinal } from './DirectorStudioFinal';
+import { DirectorStudioV26 } from './DirectorStudioV26';
 import { FichaIntakePanel } from './FichaIntakePanel';
 import { useVisionI18n } from './i18n';
 import { ProfessionalPromptLab } from './ProfessionalPromptLab';
@@ -26,31 +27,31 @@ export function VisionV2Shell() {
 
   if (view === 'home') {
     return <div className="vision-v2-home">
-      <header className="v2-welcome-top"><div><span className="micro">ABRXS</span><strong>Vision Art Creator <em>V2.5</em></strong></div><div className="v2-language"><button className={language === 'es' ? 'active' : ''} type="button" onClick={() => setLanguage('es')}>ES</button><button className={language === 'en' ? 'active' : ''} type="button" onClick={() => setLanguage('en')}>EN</button></div></header>
+      <header className="v2-welcome-top"><div><span className="micro">ABRXS</span><strong>Vision Art Creator <em>V2.6</em></strong></div><div className="v2-language"><button className={language === 'es' ? 'active' : ''} type="button" onClick={() => setLanguage('es')}>ES</button><button className={language === 'en' ? 'active' : ''} type="button" onClick={() => setLanguage('en')}>EN</button></div></header>
       <main className="v2-welcome-main">
         <div className="v2-hero">
-          <span className="micro">VISION V2.5 · DIRECTOR STUDIO</span>
-          <h1>{es ? 'Escribe la idea. Vision dirige.' : 'Write the idea. Vision directs.'}</h1>
-          <p>{es ? 'Un mejorador y director visual: pega el texto base de una imagen, video o XR; selecciona decisiones cinematográficas viendo referencias; y deja que Vision construya un prompt ABRAXAS profesional sin perder la intención original.' : 'A visual prompt improver and director: paste the base text for an image, video or XR; choose cinematic decisions through visual references; and let Vision build a professional ABRAXAS prompt without losing the original intent.'}</p>
+          <span className="micro">VISION V2.6 · DIRECTOR INTELLIGENCE</span>
+          <h1>{es ? 'Escribe la idea. Vision entiende y dirige.' : 'Write the idea. Vision understands and directs.'}</h1>
+          <p>{es ? 'Pega Source Truth. Vision analiza intención, sujeto, acción y prioridades visuales; propone decisiones explicadas; te deja compararlas; y compila un prompt ABRAXAS sin reemplazar la idea original.' : 'Paste Source Truth. Vision analyses intent, subject, action and visual priorities; proposes explainable decisions; lets you compare them; and compiles an ABRAXAS prompt without replacing the original idea.'}</p>
         </div>
         <div className="v2-primary-actions">
-          <button className="v2-choice primary" type="button" onClick={() => setView('prompt')}><div className="v2-choice-icon"><WandSparkles size={28}/></div><div><span className="micro">VISION DIRECTOR</span><strong>{es ? 'Texto base → prompt dirigido' : 'Base text → directed prompt'}</strong><p>{es ? 'Cámara, lente, exposición, foco, composición, iluminación, movimiento, look, materiales, atmósfera y FX con referencias, presets y explicaciones.' : 'Camera, lens, exposure, focus, composition, lighting, movement, look, materials, atmosphere and FX with references, presets and explanations.'}</p></div><i>→</i></button>
+          <button className="v2-choice primary" type="button" onClick={() => setView('prompt')}><div className="v2-choice-icon"><WandSparkles size={28}/></div><div><span className="micro">VISION DIRECTOR</span><strong>{es ? 'Entender → comparar → dirigir' : 'Understand → compare → direct'}</strong><p>{es ? 'Source Intelligence, recomendaciones explicadas, Reference Engine, Prompt Anatomy con leyenda y compilación de producción.' : 'Source Intelligence, explainable recommendations, Reference Engine, Prompt Anatomy legend and production compilation.'}</p></div><i>→</i></button>
           <button className="v2-choice" type="button" onClick={() => setView('assistant')}><div className="v2-choice-icon"><Bot size={28}/></div><div><span className="micro">VISION COPILOT</span><strong>{es ? 'Pensar y dirigir con IA' : 'Think and direct with AI'}</strong><p>{es ? 'NVIDIA NIM o Gemini para revisar, explicar y proponer patches que tú apruebas.' : 'NVIDIA NIM or Gemini to review, explain and propose patches that you approve.'}</p></div><i>→</i></button>
         </div>
         <div className="v2-secondary-actions">
           <button type="button" onClick={() => setView('studio')}><ImageIcon size={19}/><div><strong>{es ? 'Producción / Studio' : 'Production / Studio'}</strong><span>{es ? 'Imagen · video · storyboard · providers' : 'Image · video · storyboard · providers'}</span></div></button>
           <button type="button" onClick={() => setView('ficha')}><FileUp size={19}/><div><strong>{es ? 'Importar ficha' : 'Import ficha'}</strong><span>HTML · JSON · TXT</span></div></button>
           <button type="button" onClick={() => setView('xroll')}><Layers3 size={19}/><div><strong>XRoll Studio</strong><span>Layers · prompts · motion</span></div></button>
-          <button type="button" onClick={() => setView('learn')}><BookOpen size={19}/><div><strong>Cinema Playground</strong><span>{es ? 'Comparar y aplicar decisiones' : 'Compare and apply decisions'}</span></div></button>
+          <button type="button" onClick={() => setView('learn')}><BookOpen size={19}/><div><strong>Cinema Playground</strong><span>{es ? 'Laboratorio avanzado de comparación' : 'Advanced comparison lab'}</span></div></button>
         </div>
-        <section className="v2-principle"><Sparkles size={18}/><div><strong>{es ? 'Una sola intención. Muchas salidas.' : 'One intent. Many outputs.'}</strong><p>{es ? 'GenerationSpec mantiene la fuente de verdad. Director mejora. Copilot propone. Target compilers traducen. Creator ejecuta sólo cuando existe un provider real y tú lo confirmas.' : 'GenerationSpec remains the source of truth. Director improves. Copilot proposes. Target compilers translate. Creator executes only when a real provider exists and you confirm it.'}</p></div></section>
+        <section className="v2-principle"><Sparkles size={18}/><div><strong>{es ? 'Una sola intención. Muchas salidas.' : 'One intent. Many outputs.'}</strong><p>{es ? 'Source Truth permanece separada de la dirección. Vision propone. Tú aplicas. Target compilers traducen. Generación sólo ocurre mediante providers reales y confirmados.' : 'Source Truth stays separate from direction. Vision proposes. You apply. Target compilers translate. Generation only happens through real confirmed providers.'}</p></div></section>
       </main>
     </div>;
   }
 
   return <div className="vision-v2-shell">
     <header className="v2-switcher">
-      <button className="v2-logo" type="button" onClick={() => setView('home')}><span>V</span><div><strong>Vision V2.5</strong><small>Director Studio</small></div></button>
+      <button className="v2-logo" type="button" onClick={() => setView('home')}><span>V</span><div><strong>Vision V2.6</strong><small>Director Intelligence</small></div></button>
       <nav>
         <button className={view === 'prompt' ? 'active' : ''} type="button" onClick={() => setView('prompt')}><WandSparkles size={15}/>Director</button>
         <button className={view === 'assistant' ? 'active' : ''} type="button" onClick={() => setView('assistant')}><Bot size={15}/>Copilot</button>
@@ -64,9 +65,10 @@ export function VisionV2Shell() {
 
     <main className="v2-workspace">
       {view === 'prompt' && <div className="v25-prompt-route">
-        <DirectorStudioFinal language={language} onOpenCopilot={() => setView('assistant')} onOpenStudio={() => setView('studio')}/>
+        <DirectorStudioV26 language={language} onOpenCopilot={() => setView('assistant')} onOpenStudio={() => setView('studio')}/>
         <details className="v25-advanced-compiler">
-          <summary><Sparkles size={15}/><span><strong>{es ? 'Compilador avanzado ABRAXAS' : 'Advanced ABRAXAS compiler'}</strong><small>{es ? 'Herramientas V2 conservadas: brief estructurado, target compiler y Prompt Anatomy por bloques.' : 'Preserved V2 tools: structured brief, target compiler and block Prompt Anatomy.'}</small></span></summary>
+          <summary><Sparkles size={15}/><span><strong>{es ? 'Herramientas V2 / V2.5 conservadas' : 'Preserved V2 / V2.5 tools'}</strong><small>{es ? 'Director V2.5 original, compilador avanzado y Prompt Anatomy clásico siguen disponibles para compatibilidad y comparación.' : 'Original V2.5 Director, advanced compiler and classic Prompt Anatomy remain available for compatibility and comparison.'}</small></span></summary>
+          <DirectorStudioFinal language={language} onOpenCopilot={() => setView('assistant')} onOpenStudio={() => setView('studio')}/>
           <div className="v2-prompt-workspace"><div className="v2-prompt-tools"><ProfessionalPromptLab/></div><PromptAnatomy language={language} onCopy={copy}/></div>
         </details>
       </div>}
