@@ -14,6 +14,7 @@ import './v2prompt.css';
 import './v2copilot.css';
 import './v2cloud.css';
 import './v25.css';
+import './v25director.css';
 import { VisionI18nProvider } from './i18n';
 import { registerVisionPwa } from './pwa';
 import { VisionV2Shell } from './VisionV2Shell';
