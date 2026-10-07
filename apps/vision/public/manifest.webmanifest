@@ -1,7 +1,7 @@
 {
-  "name": "Abrxs Vision Art Creator V2",
+  "name": "Abrxs Vision Art Creator V2.6",
   "short_name": "Abrxs Vision",
-  "description": "PWA-first visual direction, professional prompt, ficha intake, XRoll, storyboard and carousel production studio.",
+  "description": "Vision V2.6 Director Intelligence: Source Truth analysis, explainable cinematic direction, visual comparison, Prompt Anatomy, Fichas, XRoll, Storyboard and production compilation.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
@@ -19,12 +19,12 @@
   ],
   "shortcuts": [
     {
-      "name": "Vision V2",
+      "name": "Vision V2.6 Director Intelligence",
       "short_name": "Vision",
       "url": "./"
     },
     {
-      "name": "How to use Vision V2",
+      "name": "How to use Vision",
       "short_name": "Guide",
       "url": "./guide.html"
     }
