@@ -4,41 +4,82 @@ Abrxs Studio is the modular, AI-native production system for the ABRXS ecosystem
 
 The repository is developed as a **modular monorepo**: every production tool must be useful and testable independently before the final Studio shell assembles the modules.
 
-## Abrxs Vision Art Creator V2
+## Abrxs Vision Art Creator V2.5 · Director Studio
 
-Vision is the first production module promoted to the V2 architecture.
+Vision is the first production module promoted to the V2.5 architecture. Its primary identity is now **visual prompt improver + cinematic director + production compiler**.
 
 - **Public PWA:** https://lordjeferies.github.io/abrxs-studio/vision/
 - **Public product page:** https://lordjeferies.github.io/abrxs-studio/vision/about.html
 - **How to use Vision:** https://lordjeferies.github.io/abrxs-studio/vision/guide.html
 - **Latest macOS release:** https://github.com/LordJeferies/abrxs-studio/releases/latest
-- **Direct macOS download:** https://github.com/LordJeferies/abrxs-studio/releases/latest/download/Abrxs-Vision-Art-Creator-macOS.zip
+- **Direct V2.5 macOS download:** https://github.com/LordJeferies/abrxs-studio/releases/latest/download/Abrxs-Vision-Art-Creator-macOS-v2.5.zip
 - **Vision source/docs:** `apps/vision/README.md`
 - **Vision V2 architecture:** `docs/vision/ARCHITECTURE_V2.md`
 - **Vision MCP:** `docs/vision/MCP.md`
+- **Continuation prompt:** `docs/vision/V2_5_CONTINUATION_PROMPT.md`
 
-Vision V2 is **PWA-first**: Prompt Studio, Ficha Intake, XRoll planning, Director, Carousel, Storyboard, local analysis and project/prompt work are intended to be fast, installable and useful from browser/iPhone/iPad/desktop. The existing Tauri build remains an optional wrapper for native capabilities such as Keychain, filesystem workflows, FFmpeg, large-video processing and local provider/model bridges.
-
-Vision Copilot can run through secure native adapters on Desktop or through the optional Firebase/Cloud Gateway from the PWA. The public frontend never needs to contain master provider API keys.
-
-## Vision V2 core flow
+### V2.5 primary flow
 
 ```text
-CONTENT CREATOR / FICHA / IDEA
+BASE TEXT / SCRIPT / IDEA / WEAK PROMPT / FICHA
             ↓
-   visual intent + source truth
+        SOURCE TRUTH
             ↓
-        VISION V2
+      VISION DIRECTOR
             ↓
- direction · prompt QA · target compiler
- ficha prompt patches · XRoll · storyboard
+Visual references + suggested/user presets
             ↓
- PROVIDER / DRESSER / HUMAN REVIEW
+Shot · Camera · Lens · Angle · Aperture · Focus
+Shutter · FPS · White Balance · Composition · Lighting
+Camera Motion · Subject Motion · Environment Motion
+Look · Atmosphere · Material · FX
+            ↓
+  ABRAXAS PRODUCTION PROMPT
+            ↓
+Target compiler / Ficha / XRoll / Storyboard / Carousel / Provider
 ```
 
-V2 can start from nothing, an existing prompt, or existing production fichas in HTML/JSON/TXT.
+The user can paste a normal paragraph or short script, then choose cinematic decisions through visual references and plain-language explanations. Vision preserves the source idea and compiles those choices into a professional prompt rather than forcing the user to edit a large wall of rigid prompt fields.
 
-The Ficha Intake parser recognizes the prompt structures used by JOC Story Editor canvases, stages non-destructive prompt patches and exports a new copy instead of silently rewriting the imported original.
+V2.5 currently contains 18+ Director dimensions, 100+ visual choices and a reusable preset system. Prompt Anatomy remains available as inline semantic guidance.
+
+## PWA-first, native when useful
+
+Vision V2.5 is **PWA-first**: Director, Prompt Anatomy, Ficha Intake, XRoll planning, Storyboard, Carousel, presets and core prompt work are designed to remain useful from browser/iPhone/iPad/desktop.
+
+Tauri wraps the same Vision frontend/core when native capabilities materially improve the workflow:
+
+- macOS Keychain
+- filesystem workflows
+- FFmpeg / large-media processing
+- Gemini CLI
+- Higgsfield CLI
+- ComfyUI localhost
+- local MCP/runtime integrations
+
+The PWA is not a fake demo. Native-only capabilities are simply exposed only when the runtime can support them reliably.
+
+## AI Copilot and providers
+
+Vision Copilot can reason through built-in NVIDIA/Gemini routes or configured custom LLM providers. It sees V2.5 Source Truth and Director selections, but it only **proposes** changes; user approval is required before a patch is applied.
+
+Assistant provider and generation provider are independent. A project may use one model for semantic direction and another for image/video generation.
+
+Custom provider settings support:
+
+- OpenAI-compatible endpoints
+- Anthropic-compatible endpoints
+- Generic REST provider definitions
+
+Custom browser keys are session-only by default. Persistent public-PWA master secrets belong behind Vision Cloud Gateway / server-side secret storage, never in GitHub Pages code or localStorage.
+
+Generic REST/image/video providers are not treated as executable until a request/response adapter is implemented and validated.
+
+## Ficha Intake
+
+Vision V2.5 can start from nothing, an existing prompt, or existing production fichas in HTML/JSON/TXT.
+
+The Ficha Intake parser recognizes prompt structures used by JOC / Story Editor canvases, stages non-destructive prompt patches and exports a new copy instead of silently rewriting the imported original.
 
 The shared Content Bridge supports a future/connected Content Creator selector:
 
@@ -50,22 +91,38 @@ Prompt engine
 
 so Content Creator and Vision do not maintain competing prompt engines.
 
+## MCP / agents
+
+Vision exposes the same application/core services through stdio MCP servers instead of automating UI clicks.
+
+General Vision MCP:
+
+```bash
+npm run vision:mcp
+```
+
+V2.5 Director MCP:
+
+```bash
+npm run vision:director:mcp
+```
+
+Professional compiler MCP:
+
+```bash
+npm run vision:pro:mcp
+```
+
+The Director MCP can list visual choices, recommend presets from base text, compile a directed prompt, audit it and return selected-text alternatives. It never submits paid generation itself.
+
 ## Core rule
 
 A piece of content has one canonical identity. Workspaces do not create parallel copies; they inspect, enrich or execute different parts of the same project.
 
-## Platform strategy
-
-Abrxs Studio can package production-critical tools as desktop apps, but web/PWA and desktop must share contracts, domain logic and design system.
-
-For **Vision specifically**, the PWA is the canonical UI. Tauri wraps the same Vision implementation when native capabilities materially improve the workflow.
-
-No product should depend on GitHub Pages to perform a desktop-only native operation, and no native wrapper should fork the core business logic.
-
 ## Planned / active modules
 
-- **Vision V2** — Prompt Studio, professional compiler, Ficha Intake, XRoll Studio, Carousel, Storyboard, Analyze, references/continuity, provider registry, PWA + optional Tauri.
-- **XRollsArchitect** — next visual-creation app after Vision V2: specialized XRoll layer architecture, depth, parallax, motion, local/cloud generation and Dresser handoff.
+- **Vision V2.5** — Director Studio, prompt improver, visual references, presets, Copilot, Ficha Intake, XRoll Studio, Carousel, Storyboard, Analyze, provider registry, PWA + optional Tauri.
+- **XRollsArchitect** — next visual-creation app after Vision: specialized XRoll layer architecture, depth, parallax, motion, local/cloud generation and Dresser handoff.
 - **Dresser** — Auto Dress, captions, B-roll, XRoll compositing, layers, motion, reframe, audio, timeline and export.
 - **Brand** — Brand Adapter + Vision DNA / BrandVisionProfile.
 - **Content** — content routing, Beta/Alfa/Omega, Visual Intent and Vision Content Bridge.
@@ -76,17 +133,6 @@ No product should depend on GitHub Pages to perform a desktop-only native operat
 - **Review** — corrections, approvals and audit trail.
 - **Publisher** — distribution handoff, scheduling and publication.
 
-## Vision is transversal
-
-Vision is not only a late-stage generator.
-
-- Brand defines the visual DNA.
-- Content defines thesis, format and `VisualIntent`.
-- Fichas carry the production structure and prompt slots.
-- Vision improves/compiles the visual production package.
-- Geómetra/Lienzos expose production structure and asset slots.
-- Dresser composes the resulting visual/audio assets into the edit.
-
 ## Vision development / validation
 
 ```bash
@@ -94,8 +140,10 @@ npm install
 npm run vision:typecheck
 npm run vision:smoke
 npm run vision:v2:smoke
+npm run vision:v25:smoke
 npm run vision:assistant:smoke
 npm run vision:mcp:smoke
+npm run vision:director:mcp:smoke
 npm run vision:pro:mcp:smoke
 npm run vision:build
 ```
@@ -113,14 +161,6 @@ npm run vision:desktop:check
 npm run vision:desktop:build
 ```
 
-One-command macOS finalize/build/install:
-
-```bash
-bash scripts/vision-v2-finalize-mac.sh
-```
-
-The script also registers the local MCP launcher with Codex/Claude Code when those CLIs are installed and requests the `Vision V2 Release` workflow when GitHub CLI is authenticated.
-
 ## Development rules
 
 1. Stabilize each app independently before joining the final Studio shell.
@@ -135,5 +175,7 @@ The script also registers the local MCP launcher with Codex/Claude Code when tho
 10. Tauri/native adapters are used only where native capabilities materially improve the workflow.
 11. Legacy compatibility is implemented through parsers/adapters/fixtures, not stacked runtime patches.
 12. Changes to imported production documents should be auditable and reversible.
+13. AI proposes project changes; user approval applies them.
+14. Generation/spend requires an actual provider adapter plus explicit confirmation.
 
-See `docs/architecture/FOUNDATION.md`, `docs/architecture/PLATFORM_TARGETS.md`, `docs/architecture/FRONTEND_SYSTEM_V1.md`, `docs/roadmap/PHASES.md`, `docs/vision/ARCHITECTURE_V2.md` and `docs/vision/MCP.md`.
+See `docs/architecture/FOUNDATION.md`, `docs/architecture/PLATFORM_TARGETS.md`, `docs/architecture/FRONTEND_SYSTEM_V1.md`, `docs/roadmap/PHASES.md`, `docs/vision/ARCHITECTURE_V2.md`, `docs/vision/MCP.md` and `docs/vision/V2_5_CONTINUATION_PROMPT.md`.
