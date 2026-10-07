@@ -3,8 +3,12 @@ import { runCloudAssistant } from './cloudGateway';
 import { defaults, type DirectorState } from './promptEngine';
 import { PROFESSIONAL_BRIEF_EVENT, PROFESSIONAL_BRIEF_STORAGE_KEY } from './ProfessionalPromptLab';
 import { professionalBriefDefaults, type ProfessionalPromptBrief } from './professionalPromptEngine';
+import type { DirectorSelections } from './directorFinal';
 
 const DIRECTOR_KEY = 'abrxsVisionDirectorV1';
+const V25_SOURCE_KEY = 'abrxsVisionV25FinalSource';
+const V25_SELECTIONS_KEY = 'abrxsVisionV25FinalSelections';
+const V25_SELECTED_TEXT_KEY = 'abrxsVisionV25SelectedText';
 const NVIDIA_MODEL_KEY = 'abrxsVisionAssistantNvidiaModelV1';
 const NVIDIA_ENDPOINT_KEY = 'abrxsVisionAssistantNvidiaEndpointV1';
 const GEMINI_MODEL_KEY = 'abrxsVisionAssistantGeminiModelV1';
@@ -118,12 +122,24 @@ export async function runVisionAssistant(input: {
   return parseAssistantEnvelope(result.response || JSON.stringify(result.raw ?? result));
 }
 
+function loadV25Selections(): DirectorSelections {
+  try { return JSON.parse(localStorage.getItem(V25_SELECTIONS_KEY) || '{}') as DirectorSelections; } catch { return {}; }
+}
+
 export function currentAssistantContext() {
   let director: DirectorState = defaults;
   let brief: ProfessionalPromptBrief = professionalBriefDefaults;
   try { director = { ...defaults, ...JSON.parse(localStorage.getItem(DIRECTOR_KEY) || '{}') as DirectorState }; } catch { /* use defaults */ }
   try { brief = { ...professionalBriefDefaults, ...JSON.parse(localStorage.getItem(PROFESSIONAL_BRIEF_STORAGE_KEY) || '{}') as ProfessionalPromptBrief }; } catch { /* use defaults */ }
-  return { director, brief };
+  return {
+    director,
+    brief,
+    v25: {
+      sourceText: localStorage.getItem(V25_SOURCE_KEY) || '',
+      selections: loadV25Selections(),
+      selectedText: localStorage.getItem(V25_SELECTED_TEXT_KEY) || '',
+    },
+  };
 }
 
 export function applyAssistantAction(action: VisionAssistantAction) {
@@ -132,6 +148,18 @@ export function applyAssistantAction(action: VisionAssistantAction) {
     const next = { ...current, [action.field]: action.value } as DirectorState;
     localStorage.setItem(DIRECTOR_KEY, JSON.stringify(next));
     window.dispatchEvent(new CustomEvent('abrxs-vision-director-patch', { detail: { field: action.field, value: action.value } }));
+    return;
+  }
+  if (action.type === 'set-v25-option') {
+    const current = loadV25Selections();
+    const next = { ...current, [action.category]: action.optionId };
+    localStorage.setItem(V25_SELECTIONS_KEY, JSON.stringify(next));
+    window.dispatchEvent(new CustomEvent('abrxs-vision-v25-patch', { detail: { category: action.category, optionId: action.optionId } }));
+    return;
+  }
+  if (action.type === 'replace-v25-source') {
+    localStorage.setItem(V25_SOURCE_KEY, action.value);
+    window.dispatchEvent(new CustomEvent('abrxs-vision-v25-source', { detail: { value: action.value } }));
     return;
   }
   const current = currentAssistantContext().brief;
