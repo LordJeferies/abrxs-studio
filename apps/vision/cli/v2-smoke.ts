@@ -30,7 +30,7 @@ assert.equal(parsed.schema, 'joc-story-editor-r5');
 assert.equal(parsed.pieceCount, 1);
 assert.equal(parsed.slots.length, 3);
 assert.ok(parsed.slots.some((slot) => slot.kind === 'asset-override'));
-assert.ok(parsed.slots.some((slot) => slot.kind === 'cover-prompt'));
+assert.ok(parsed.slots.some((slot) => slot.breadcrumb.includes('cover') && slot.prompt === 'old cover prompt'));
 
 const target = parsed.slots.find((slot) => slot.kind === 'asset-override');
 assert.ok(target);
