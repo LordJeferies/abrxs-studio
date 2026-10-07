@@ -72,8 +72,11 @@ export async function geminiCliStatus() {
 }
 
 function parseCloudResult(result: VisionAssistantEnvelope | { content?: string; response?: string; raw?: unknown }): VisionAssistantEnvelope {
-  if ('message' in result && Array.isArray(result.actions) && Array.isArray(result.references)) return result;
-  return parseAssistantEnvelope(result.content || result.response || JSON.stringify(result.raw ?? result));
+  if ('message' in result && Array.isArray(result.actions) && Array.isArray(result.references)) {
+    return result as VisionAssistantEnvelope;
+  }
+  const payload = result as { content?: string; response?: string; raw?: unknown };
+  return parseAssistantEnvelope(payload.content || payload.response || JSON.stringify(payload.raw ?? payload));
 }
 
 export async function runVisionAssistant(input: {
