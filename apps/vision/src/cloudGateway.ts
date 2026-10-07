@@ -1,4 +1,5 @@
 import type { AssistantProviderId, VisionAssistantEnvelope } from './assistantCore';
+import { getVisionAppCheckToken } from './firebaseAppCheck';
 
 export type CloudGatewayMessage = { role: 'user' | 'assistant'; content: string };
 
@@ -23,10 +24,17 @@ function normalizeBase(url: string) {
   return url.trim().replace(/\/+$/, '');
 }
 
+async function gatewayHeaders() {
+  const headers: Record<string, string> = { 'content-type': 'application/json' };
+  const token = await getVisionAppCheckToken();
+  if (token) headers['X-Firebase-AppCheck'] = token;
+  return headers;
+}
+
 async function postJson<T>(url: string, body: unknown): Promise<T> {
   const response = await fetch(url, {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers: await gatewayHeaders(),
     body: JSON.stringify(body),
   });
   const text = await response.text();
@@ -56,7 +64,7 @@ export async function submitCloudGeneration(baseUrl: string, request: CloudGener
 
 export async function getCloudGenerationJob(baseUrl: string, jobId: string) {
   const base = normalizeBase(baseUrl);
-  const response = await fetch(`${base}/jobs/${encodeURIComponent(jobId)}`);
+  const response = await fetch(`${base}/jobs/${encodeURIComponent(jobId)}`, { headers: await gatewayHeaders() });
   if (!response.ok) throw new Error(`Vision Cloud Gateway ${response.status}: ${await response.text()}`);
   return await response.json() as { jobId: string; status: string; outputUrl?: string; error?: string };
 }
