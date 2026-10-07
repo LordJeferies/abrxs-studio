@@ -5,7 +5,6 @@ import {
   DIRECTOR_CATEGORIES,
   DIRECTOR_OPTIONS,
   DIRECTOR_PRESETS,
-  anatomizePrompt,
   auditDirectorPrompt,
   compileDirectorPrompt,
   recommendPresets,
@@ -14,6 +13,7 @@ import {
   type DirectorMode,
   type DirectorSelections,
 } from '../src/directorFinal';
+import { anatomizePromptV25 } from '../src/promptAnatomyV25';
 
 const server = new McpServer({ name: 'abrxs-vision-director', version: '2.5.0' });
 const mode = z.enum(['image','video','xroll']).default('video');
@@ -93,7 +93,7 @@ server.registerTool('vision.director.audit_prompt', {
   inputSchema: { prompt: z.string().min(1), mode },
 }, async ({ prompt, mode: selectedMode }) => ({ content: [{ type: 'text', text: JSON.stringify({
   audit: auditDirectorPrompt(prompt, selectedMode as DirectorMode),
-  anatomy: anatomizePrompt(prompt),
+  anatomy: anatomizePromptV25(prompt),
 }, null, 2) }] }));
 
 server.registerTool('vision.director.improve_selection', {
