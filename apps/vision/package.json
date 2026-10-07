@@ -12,6 +12,7 @@
     "pro:cli": "tsx cli/professional-cli.ts",
     "smoke": "tsx cli/vision-cli.ts smoke",
     "v2:smoke": "tsx cli/v2-smoke.ts",
+    "assistant:smoke": "tsx cli/assistant-smoke.ts",
     "mcp": "tsx mcp/server.ts",
     "mcp:smoke": "tsx mcp/smoke.ts",
     "pro:mcp": "tsx mcp/professional-server.ts",
