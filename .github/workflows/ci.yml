@@ -18,6 +18,7 @@ jobs:
       - run: npm run build:web
       - run: npm run vision:typecheck
       - run: npm run vision:smoke
+      - run: npm run vision:v2:smoke
       - run: npm run vision:mcp:smoke
       - run: npm run vision:pro:mcp:smoke
       - run: npm run vision:build
@@ -48,6 +49,7 @@ jobs:
       - run: chmod +x scripts/*.sh
       - run: npm run vision:typecheck
       - run: npm run vision:smoke
+      - run: npm run vision:v2:smoke
       - run: npm run vision:mcp:smoke
       - run: npm run vision:pro:mcp:smoke
       - run: npm run vision:build
