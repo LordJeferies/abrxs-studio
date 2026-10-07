@@ -23,6 +23,11 @@ jobs:
       - run: npm run vision:mcp:smoke
       - run: npm run vision:pro:mcp:smoke
       - run: npm run vision:build
+      - name: Build Vision Firebase gateway
+        run: |
+          cd apps/vision/firebase/functions
+          npm install
+          npm run build
 
   desktop-macos:
     runs-on: macos-latest
