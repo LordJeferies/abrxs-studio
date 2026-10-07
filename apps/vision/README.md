@@ -1,24 +1,214 @@
-# Abrxs Vision Art Creator
+# Abrxs Vision Art Creator V2
 
-Abrxs Vision Art Creator is the visual-direction and model-aware generation workspace inside Abrxs Studio. It is Desktop-first, PWA-capable and offline-first for its canonical planning/prompt core.
+Abrxs Vision is the visual-direction, prompt-engineering and production-preparation workspace inside Abrxs Studio.
+
+V2 is **PWA-first** and keeps Tauri as an optional native wrapper. The web/PWA and desktop builds use the same React/core implementation.
 
 ## Public links
 
 - Repository: https://github.com/LordJeferies/abrxs-studio
 - Vision PWA: https://lordjeferies.github.io/abrxs-studio/vision/
 - How to use: https://lordjeferies.github.io/abrxs-studio/vision/guide.html
+- V2 architecture: `apps/vision/docs/VISION_V2_ARCHITECTURE.md`
 - Prompt quality standard: `apps/vision/docs/PROMPT_QUALITY_STANDARD_V03.md`
 - Skill/provenance map: `apps/vision/docs/SKILL_PROVENANCE_V04.md`
 
-## V0.4: Visual Generation Skill Engine
+## What Vision V2 is
 
-V0.4 separates three concerns that must not be confused:
+Vision is not a generic prompt textarea. It converts editorial intent into a structured visual-production package.
 
-1. **Canonical production truth** — ABRAXAS visual specification: function, subject/action, scene, camera, composition, light, materials, brand, continuity, evidence, output and negatives.
-2. **Target grammar** — a deterministic translator reshapes the canonical spec for a specific image/video lane instead of sending the same universal paragraph to every model.
-3. **Provider execution** — credentials, live model discovery, capability validation, jobs and spend happen only in provider adapters. A prompt compiler never silently spends credits.
+```text
+CONTENT / FICHA
+      ↓
+visual intent + source truth + prompt draft
+      ↓
+VISION V2
+      ↓
+direction + prompt QA + target compiler + XR/storyboard/assets
+      ↓
+PROVIDER / DRESSER / HUMAN EDITOR
+```
 
-Current target profiles:
+The canonical direction should make explicit, when relevant:
+
+- visual function / purpose;
+- subject or hero object;
+- observable action/state;
+- scene/environment;
+- composition;
+- camera/lens/framing/movement;
+- lighting;
+- material/texture;
+- palette and Brand Vision;
+- typography/text-safe zones;
+- continuity;
+- evidence restrictions;
+- output contract;
+- QA and downstream handoff.
+
+Target-specific compilers then translate that canonical direction for Higgsfield/Seedance/Kling/Veo/NVIDIA/Gemini/ComfyUI or generic production without pretending every model supports the same prompt grammar.
+
+## V2 home and workspaces
+
+Vision now opens with a welcome screen instead of dropping directly into a technical director form.
+
+Primary routes:
+
+1. **Prompt Studio** — create/improve production prompts.
+2. **Generate / Director Studio** — image/video/storyboard direction and provider-aware prompt compilation.
+3. **Ficha Intake** — import and improve existing HTML/JSON/TXT fichas.
+4. **XRoll Studio** — construct XR/XRoll packages as layered visual systems.
+5. Existing **Storyboard, Carousel, Analyze, References, Providers and Settings** remain available inside Studio.
+
+The workspace can be changed without creating a new project.
+
+## Ficha Intake
+
+Vision can ingest existing production canvases instead of forcing the user to rebuild them.
+
+Supported inputs:
+
+- `.html`
+- `.json`
+- `.txt`
+
+HTML is **never executed**. Vision searches for compatible `<script type="application/json">` data blocks and reads the embedded source-of-truth structure.
+
+The current parser supports the Story Editor patterns used in JOC production examples, including:
+
+- R5-style `id="seed"` JSON;
+- R10.1-style `id="app-data"` JSON;
+- `parts[].prompt_override`;
+- `parts[].assets[].prompt_override`;
+- `promptNoText`;
+- `promptWithText`;
+- `cover.prompt` / `cover.prompt_override`;
+- `compositionPrompt`;
+- static/carousel visual `prompt` fields.
+
+Workflow:
+
+```text
+Import ficha
+   ↓
+Detect pieces / assets / prompt fields
+   ↓
+Show current prompt + ficha context
+   ↓
+Manual edit or Vision Auto Improve
+   ↓
+Stage patch
+   ↓
+Review before/after
+   ↓
+Export updated copy
+```
+
+The loaded original is never destructively mutated. HTML export replaces only the embedded JSON payload; the surrounding canvas/editor HTML is preserved.
+
+A patch manifest can also be exported for audit/versioning.
+
+## Content Creator bridge
+
+`src/contentBridge.ts` provides the shared contract for Content Creator.
+
+Recommended Content Creator control:
+
+```text
+Prompt engine
+○ Basic
+● Abrxs Vision
+```
+
+`Basic` preserves the current Content Creator prompt behavior.
+
+`Abrxs Vision` sends editorial/visual intent to the shared Vision core and receives a `VisionContentPackage` containing production prompt/QA and, when requested, an XRoll package.
+
+Content Creator remains responsible for:
+
+- thesis;
+- source truth;
+- editorial structure;
+- content format;
+- script/copy;
+- initial visual intent / prompt draft.
+
+Vision remains responsible for:
+
+- production direction;
+- prompt improvement;
+- target-specific translation;
+- references/continuity;
+- output contracts;
+- XRoll construction.
+
+The original `promptDraft` should be kept for history/audit even after Vision generates an approved version.
+
+## XRoll Studio
+
+V2 treats an XR/XRoll as a timed compositing system rather than one flattened still.
+
+Inputs include:
+
+- idea/text;
+- preset;
+- duration;
+- aspect ratio;
+- Brand Vision;
+- style;
+- camera;
+- motion;
+- layer strategy.
+
+Layer selection can be:
+
+- Auto;
+- 2–8 manual layers.
+
+Supported layer roles include:
+
+```text
+BACKGROUND
+ATMOSPHERE
+MIDGROUND
+SUBJECT
+PROP
+FOREGROUND
+GRAPHICS
+TEXT
+```
+
+The compiler produces:
+
+- master XRoll prompt;
+- independent prompt per layer;
+- motion/timing spec;
+- parallax guidance;
+- composite order;
+- QA;
+- Dresser handoff.
+
+Current presets:
+
+- Concept Reveal
+- Problem → Solution
+- Decision / Criterion
+- Depth Parallax
+- Data Focus
+- Quote Concept
+
+Custom combinations can be saved locally as presets. Presets store structured settings, not a copied prose prompt, so the same direction can be recompiled for another target/model.
+
+## Prompt Studio and professional compiler
+
+The professional prompt layer separates:
+
+1. canonical production truth;
+2. output contract;
+3. target/model grammar;
+4. provider execution.
+
+Current targets:
 
 - `generic-production`
 - `higgsfield-cinema`
@@ -29,192 +219,150 @@ Current target profiles:
 - `nvidia`
 - `gemini`
 
-The provider catalog is deliberately dynamic. Higgsfield/NVIDIA/Gemini capabilities must be resolved live before enabling cloud generation. Model names, pricing, duration and supported inputs are not treated as permanent hard-coded facts.
+Important rules:
 
-## Rules derived from the external skill/repository audit
+- I2V describes **what changes from an approved first frame** rather than re-describing the entire image.
+- Exact text should be isolated as an editable typography layer when spelling fidelity is critical.
+- References use semantic roles such as identity/look/composition/wardrobe/location/motion/product/logo/palette/text-layout/first-frame/last-frame.
+- Prompt quality is scored from production completeness and compatibility, not from decorative adjectives.
+- Provider execution stays disabled until a real live capability/credential path is verified.
 
-The implementation in `src/skillEngine.ts` now encodes the useful parts of the repositories supplied during design:
+## ABRAXAS quality rule
 
-- MCSLA-style model/workspace + camera + subject + look + action structure for Higgsfield-oriented prompts.
-- Image-to-video describes **motion/change from the supplied first frame**, not a decorative re-description of the image.
-- Camera movement is constrained; competing moves should be sequenced or split rather than stacked blindly.
-- Every reference has a semantic role: `identity`, `look`, `composition`, `wardrobe`, `location`, `motion`, `product`, `logo`, `palette`, `text-layout`, `first-frame`, `last-frame`.
-- Storyboards carry identity/location/light/palette/geometry continuity into every shot package.
-- Short-form video uses explicit temporal beats and audio intent instead of one undifferentiated paragraph.
-- Exact text inside generated imagery is treated as risky; use a separate text layer when wording must be exact.
-- Video/keyframe review should happen before expensive generation when identity or composition is critical.
-- Keep a successful take and change the diagnosed failure rather than randomly rewriting all successful decisions.
-- Browser automation is fallback-only when an official CLI/SDK/API exists.
+Do not accept this as a production direction:
 
-See `docs/SKILL_PROVENANCE_V04.md` for source/license boundaries. Non-commercial reference projects are concept-only; their source is not copied into Abrxs.
-
-## Quality gates
-
-The provider-aware compiler audits:
-
-- canonical production completeness
-- camera feasibility
-- temporal coverage/coherence
-- identity/location/light/palette continuity
-- reference-role semantics
-- image-to-video first-frame contract
-- target prompt budget / overprompting
-- physical plausibility and anti-mutation constraints
-- evidence integrity
-- explicit visual purpose
-
-A high score means the **production specification is explicit and compatible**, not that an aesthetic result is guaranteed.
-
-## Reference + continuity system
-
-Uploaded references are no longer anonymous files. In the UI each reference can be assigned a role. The generated continuity pack carries stable identity, wardrobe, location, light direction, palette and geometry across a storyboard or take family.
-
-This is the base for future `New Take` and `New Scene` operations:
-
-- **New Take**: preserve identity/location/wardrobe/time, change camera/framing/action within the same beat.
-- **New Scene**: preserve character/brand DNA while explicitly changing location/action/light and creating a new continuity key.
-
-## Storyboard V0.4
-
-Storyboard no longer emits a generic comma-separated shot prompt. Every shot is compiled through the same provider-aware skill engine used by Quick.
-
-The UI can choose a prompt target for storyboard shots and displays the resulting QA score. The board also publishes a continuity contract so adjacent shots preserve screen direction, identity, wardrobe, hero props and environmental logic.
-
-## Providers and execution
-
-### Prompt Only
-Ready and fully local.
-
-### Higgsfield
-The adapter is built around the **official Higgsfield CLI/SDK execution surface**. The local CLI can:
-
-```bash
-npm run vision:cli -- models
+```text
+premium modern cinematic professional image
 ```
 
-which invokes live model discovery through:
+The useful question is what the visual *does* and how another system/person can reproduce it without guessing.
 
-```bash
-higgsfield model list --json
-```
+A production prompt should express concrete observable decisions: visual function, scene, action/state, composition, camera, light, material, brand, continuity, constraints and output.
 
-Generation is intentionally blocked unless you select a live model and explicitly accept provider spend:
+## PWA vs Tauri
 
-```bash
-npm run vision:cli -- run \
-  --target higgsfield-seedance \
-  --mode text-to-video \
-  --intent cinematic \
-  --idea "A founder commits to the decision" \
-  --model <LIVE_MODEL_ID> \
-  --confirm-spend
-```
+### PWA — canonical product
 
-No provider credential is committed to the repository.
+Use the PWA for:
 
-### NVIDIA / Gemini
-Capability adapters are prepared, but generation remains disabled until credentials, exact model capability and request schema are validated against the connected account. The UI must not advertise unsupported/free/unlimited generation.
+- Prompt Studio;
+- Ficha Intake;
+- XRoll Studio;
+- Director;
+- Carousel;
+- Storyboard;
+- local analysis;
+- offline project/prompt work;
+- iPhone/iPad/Desktop review.
 
-### ComfyUI
-Prepared as a local workflow target. Actual execution requires inspection of the selected workflow JSON and installed node/model inventory.
+It deploys from GitHub Pages.
 
-## UI
+### Tauri — optional native adapter
 
-V0.4 adds a visible **Visual Generation Skill Engine** to Quick:
+Keep the desktop wrapper for capabilities that should not live in a public browser runtime:
 
-- target
-- mode
-- intent
-- duration
-- route recommendation
-- translated target prompt
-- QA score/gates
-- warnings
-- provenance indicators
+- macOS Keychain / secure provider credentials;
+- local filesystem workflows;
+- FFmpeg / large-video processing;
+- native local model processes;
+- provider/native bridges.
 
-Settings now separates:
+Do **not** fork the product. Tauri wraps the same Vision frontend/core.
 
-- platform language: English / Español
-- prompt output language: AUTO / EN / ES
+## Language
 
-Reference rows expose their semantic role. Provider rows show execution/discovery policy instead of pretending prepared integrations are already operational.
+Settings separates:
 
-## What works offline
+- platform UI language: English / Español;
+- prompt output language: AUTO / EN / ES.
 
-- Quick Creator
-- canonical production-spec Prompt Director
-- provider/model-target prompt compilation
-- Prompt Quality Audit and provider compatibility gates
-- route recommendation
-- Director Lock
-- Vision DNA presets including JOC
-- Carousel prompt generation
-- Storyboard + per-shot target compilation
-- local image/video metadata analysis
-- IndexedDB project persistence
-- JSON import/export
-- Prompt Pack export
-- English/Spanish UI
+That allows an Spanish UI with English provider prompts, or vice versa.
 
-Cloud generation itself is not offline.
+## Offline boundary
 
-## CLI
+Available offline after the PWA shell is cached:
+
+- Prompt Studio/core;
+- Prompt Doctor/professional QA;
+- Ficha parsing/patching;
+- XRoll compiler/presets;
+- Director controls;
+- Carousel prompt generation;
+- Storyboard planning;
+- project persistence/import/export;
+- local metadata analysis.
+
+Cloud provider execution is not offline.
+
+## Development
+
+From repository root:
 
 ```bash
 npm install
-npm run vision:cli -- status
-npm run vision:cli -- prompt --idea "Joc makes a decision criterion visible" --preset joc-editorial --lang en
-npm run vision:cli -- audit --idea "premium cinematic professional"
-npm run vision:cli -- skill --idea "A client hesitates before signing" --target higgsfield-seedance --mode text-to-video --intent cinematic --duration 8
-npm run vision:cli -- skill --idea "Animate this approved shot" --target higgsfield-seedance --mode image-to-video --ref first-frame:shot.png --start-image
-npm run vision:cli -- route --mode text-to-video --intent social-hook --multi-shot
-npm run vision:cli -- storyboard --idea "A client hesitates before signing" --grammar suspense --target higgsfield-seedance
-npm run vision:cli -- providers
-npm run vision:smoke
-```
-
-## MCP
-
-Run:
-
-```bash
-npm run vision:mcp
-```
-
-Current MCP tools:
-
-- `vision.get_status`
-- `vision.get_provider_registry`
-- `vision.compile_prompt_pair`
-- `vision.audit_prompt`
-- `vision.compile_provider_prompt`
-- `vision.recommend_generation_route`
-- `vision.compile_carousel_prompt`
-- `vision.create_storyboard`
-- `vision.compile_storyboard_shot`
-
-MCP compiles/plans but does **not** execute paid cloud generation in V0.4.
-
-## Validation
-
-```bash
 npm run vision:typecheck
 npm run vision:smoke
+npm run vision:v2:smoke
 npm run vision:mcp:smoke
+npm run vision:pro:mcp:smoke
 npm run vision:build
+```
+
+Run locally:
+
+```bash
+npm run vision:dev
+```
+
+Then open:
+
+```text
+http://127.0.0.1:4174
+```
+
+Desktop checks/build:
+
+```bash
 npm run vision:desktop:check
 npm run vision:desktop:build
 ```
 
-macOS helper:
+## CLI / MCP
+
+Existing Vision CLI/MCP commands remain available. V2 core modules should continue moving toward the same shared application-service layer so UI, CLI, MCP and Content Creator do not implement competing prompt logic.
 
 ```bash
-cd "$HOME/Downloads/abrxs-studio"
-git config core.fileMode false
-git pull --ff-only origin main
-bash scripts/vision-v02-mac.sh
+npm run vision:cli -- status
+npm run vision:smoke
+npm run vision:v2:smoke
+npm run vision:mcp:smoke
+npm run vision:pro:mcp:smoke
 ```
 
-## Current boundary
+## Security and source truth
 
-V0.4 is a real provider-aware **planning and prompt-translation layer** plus an official Higgsfield CLI execution adapter. It does not claim that NVIDIA, Gemini, ComfyUI layer separation, relight/upscale, or every Higgsfield workspace is already wired end-to-end. Those actions stay disabled until their provider adapter, job lifecycle, credential handling and tests are complete.
+- Never execute imported HTML.
+- Never silently overwrite the imported original.
+- Never treat a visual interpretation as factual evidence.
+- Never commit provider secrets.
+- Never advertise a cloud generation capability until its live provider path is verified.
+- Preserve source truth, exact approved text, IDs and continuity constraints from imported fichas.
+
+## Stable V2 release gates
+
+A V2 release is not considered stable until these pass:
+
+```text
+TypeScript
+legacy Vision smoke
+V2 Ficha/XRoll smoke
+MCP smoke
+professional MCP smoke
+PWA production build
+GitHub Pages build/deploy
+Tauri cargo check/build
+HTML/JSON prompt-only round-trip
+390px / 430px mobile responsive pass
+```
+
+See `docs/VISION_V2_ARCHITECTURE.md` for module reasoning, ownership boundaries and implementation rules.
