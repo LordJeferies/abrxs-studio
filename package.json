@@ -23,6 +23,7 @@
     "vision:pro:cli": "npm run pro:cli -w @abrxs/vision --",
     "vision:smoke": "npm run smoke -w @abrxs/vision",
     "vision:v2:smoke": "npm run v2:smoke -w @abrxs/vision",
+    "vision:v25:smoke": "npm run v25:smoke -w @abrxs/vision",
     "vision:assistant:smoke": "npm run assistant:smoke -w @abrxs/vision",
     "vision:mcp": "npm run mcp -w @abrxs/vision",
     "vision:mcp:smoke": "npm run mcp:smoke -w @abrxs/vision",
