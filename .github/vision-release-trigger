@@ -1,3 +1,3 @@
 Abrxs Vision Art Creator V2
-release-trigger: 2026-10-07
-purpose: publish verified Vision V2 macOS bundle and stable download URL
+release-trigger: 2026-10-07T16:35Z
+purpose: dispatch the stable Vision V2 macOS release workflow after the trigger workflow is present on main
