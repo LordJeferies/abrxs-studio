@@ -1,4 +1,5 @@
 import { parseAssistantEnvelope, type AssistantProviderId, type VisionAssistantAction, type VisionAssistantEnvelope } from './assistantCore';
+import { runCloudAssistant } from './cloudGateway';
 import { defaults, type DirectorState } from './promptEngine';
 import { PROFESSIONAL_BRIEF_EVENT, PROFESSIONAL_BRIEF_STORAGE_KEY } from './ProfessionalPromptLab';
 import { professionalBriefDefaults, type ProfessionalPromptBrief } from './professionalPromptEngine';
@@ -8,12 +9,14 @@ const NVIDIA_MODEL_KEY = 'abrxsVisionAssistantNvidiaModelV1';
 const NVIDIA_ENDPOINT_KEY = 'abrxsVisionAssistantNvidiaEndpointV1';
 const GEMINI_MODEL_KEY = 'abrxsVisionAssistantGeminiModelV1';
 const COMFY_ENDPOINT_KEY = 'abrxsVisionComfyEndpointV1';
+const CLOUD_GATEWAY_KEY = 'abrxsVisionCloudGatewayV1';
 
 export type AssistantPreferences = {
   nvidiaModel: string;
   nvidiaEndpoint: string;
   geminiModel: string;
   comfyEndpoint: string;
+  cloudGateway: string;
 };
 
 export type AssistantMessage = { role: 'user' | 'assistant'; content: string };
@@ -37,6 +40,7 @@ export function loadAssistantPreferences(): AssistantPreferences {
     nvidiaEndpoint: localStorage.getItem(NVIDIA_ENDPOINT_KEY) || 'https://integrate.api.nvidia.com/v1/chat/completions',
     geminiModel: localStorage.getItem(GEMINI_MODEL_KEY) || '',
     comfyEndpoint: localStorage.getItem(COMFY_ENDPOINT_KEY) || 'http://127.0.0.1:8188',
+    cloudGateway: localStorage.getItem(CLOUD_GATEWAY_KEY) || '',
   };
 }
 
@@ -45,6 +49,7 @@ export function saveAssistantPreferences(value: AssistantPreferences) {
   localStorage.setItem(NVIDIA_ENDPOINT_KEY, value.nvidiaEndpoint.trim());
   localStorage.setItem(GEMINI_MODEL_KEY, value.geminiModel.trim());
   localStorage.setItem(COMFY_ENDPOINT_KEY, value.comfyEndpoint.trim());
+  localStorage.setItem(CLOUD_GATEWAY_KEY, value.cloudGateway.trim());
 }
 
 export async function secretStatus(provider: string) {
@@ -66,12 +71,31 @@ export async function geminiCliStatus() {
   return invoke<{ installed: boolean; desktop?: boolean; version?: string; binary?: string; error?: string }>('vision_gemini_status');
 }
 
+function parseCloudResult(result: VisionAssistantEnvelope | { content?: string; response?: string; raw?: unknown }): VisionAssistantEnvelope {
+  if ('message' in result && Array.isArray(result.actions) && Array.isArray(result.references)) return result;
+  return parseAssistantEnvelope(result.content || result.response || JSON.stringify(result.raw ?? result));
+}
+
 export async function runVisionAssistant(input: {
   provider: AssistantProviderId;
   systemPrompt: string;
   messages: AssistantMessage[];
   preferences: AssistantPreferences;
 }): Promise<VisionAssistantEnvelope> {
+  if (!isVisionDesktop()) {
+    if (!input.preferences.cloudGateway.trim()) {
+      throw new Error('Configura Vision Cloud Gateway en Settings para usar Copilot desde la PWA.');
+    }
+    const model = input.provider === 'nvidia' ? input.preferences.nvidiaModel : input.preferences.geminiModel;
+    const result = await runCloudAssistant(input.preferences.cloudGateway, {
+      provider: input.provider,
+      model: model || undefined,
+      systemPrompt: input.systemPrompt,
+      messages: input.messages,
+    });
+    return parseCloudResult(result);
+  }
+
   if (input.provider === 'nvidia') {
     const result = await invoke<{ content?: string; raw?: unknown }>('vision_nvidia_chat', {
       model: input.preferences.nvidiaModel,
