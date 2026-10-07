@@ -2,17 +2,47 @@
 
 Abrxs Studio is the modular, AI-native production system for the ABRXS ecosystem.
 
-The repository is now developed as a **modular monorepo**: each production tool must be useful and testable as a standalone app before the final Studio shell assembles the modules.
+The repository is developed as a **modular monorepo**: every production tool must be useful and testable independently before the final Studio shell assembles the modules.
 
-## First standalone app — Abrxs Vision Art Creator V0.2
+## Abrxs Vision Art Creator V2
 
-Vision is the first module being stabilized independently.
+Vision is the first production module promoted to the V2 architecture.
 
-- **PWA:** https://lordjeferies.github.io/abrxs-studio/vision/
+- **Public PWA:** https://lordjeferies.github.io/abrxs-studio/vision/
 - **How to use Vision:** https://lordjeferies.github.io/abrxs-studio/vision/guide.html
 - **Vision source/docs:** `apps/vision/README.md`
+- **Vision V2 architecture:** `apps/vision/docs/VISION_V2_ARCHITECTURE.md`
 
-Vision V0.2 is Desktop-first but its local core is also installable as a responsive PWA. Prompt direction, carousel prompts, storyboards, project storage and basic image/video analysis are designed to work offline. Cloud AI providers are optional capability extensions rather than a prerequisite for opening or using the app.
+Vision V2 is **PWA-first**: Prompt Studio, Ficha Intake, XRoll planning, Director, Carousel, Storyboard, local analysis and project/prompt work are intended to be fast, installable and useful from browser/iPhone/iPad/desktop. The existing Tauri build remains an optional wrapper for native capabilities such as Keychain, filesystem workflows, FFmpeg, large-video processing and local provider/model bridges.
+
+## Vision V2 core flow
+
+```text
+CONTENT CREATOR / FICHA / IDEA
+            ↓
+   visual intent + source truth
+            ↓
+        VISION V2
+            ↓
+ direction · prompt QA · target compiler
+ ficha prompt patches · XRoll · storyboard
+            ↓
+ PROVIDER / DRESSER / HUMAN REVIEW
+```
+
+V2 can start from nothing, an existing prompt, or existing production fichas in HTML/JSON/TXT.
+
+The Ficha Intake parser recognizes the prompt structures used by JOC Story Editor canvases, stages non-destructive prompt patches and exports a new copy instead of silently rewriting the imported original.
+
+The shared Content Bridge supports a future/connected Content Creator selector:
+
+```text
+Prompt engine
+○ Basic
+● Abrxs Vision
+```
+
+so Content Creator and Vision do not maintain competing prompt engines.
 
 ## Core rule
 
@@ -20,71 +50,74 @@ A piece of content has one canonical identity. Workspaces do not create parallel
 
 ## Platform strategy
 
-Abrxs Studio is **Desktop-first** for production-critical work. Desktop apps package their frontend locally and must not depend on GitHub Pages to run.
+Abrxs Studio can package production-critical tools as desktop apps, but web/PWA and desktop must share contracts, domain logic and design system.
 
-Web/PWA versions are adapted companions that share contracts, domain logic and the design system. Anything reliable and secure in-browser should remain functional there.
+For **Vision specifically**, the PWA is the canonical UI. Tauri wraps the same Vision implementation when native capabilities materially improve the workflow.
 
-## Planned modules
+No product should depend on GitHub Pages to perform a desktop-only native operation, and no native wrapper should fork the core business logic.
 
-- **Vision** — standalone V0.2 now: Prompt Director, Cinema controls, Carousel, Storyboard, local Analyze, Layers plan, Vision Space foundation, provider registry.
-- **Dresser** — next new standalone tool: Auto Dress, captions, B-roll, XRoll, layers, motion, reframe, audio, timeline and export.
-- **Brand** — regenerated later around Brand Adapter + Vision DNA.
-- **Content** — regenerated later around content routing, Beta/Alfa and Visual Intent.
+## Planned / active modules
+
+- **Vision V2** — Prompt Studio, professional compiler, Ficha Intake, XRoll Studio, Carousel, Storyboard, Analyze, references/continuity, provider registry, PWA + optional Tauri.
+- **Dresser** — next standalone production tool: Auto Dress, captions, B-roll, XRoll compositing, layers, motion, reframe, audio, timeline and export.
+- **Brand** — Brand Adapter + Vision DNA / BrandVisionProfile.
+- **Content** — content routing, Beta/Alfa/Omega, Visual Intent and Vision Content Bridge.
 - **Fichas** — canonical ficha editing, provenance, validation and visual production.
-- **Editorial** — regenerated from Editorial OS/Emulator: Grid, Board, Timeline, Agenda, Calendar and content library.
-- **Geómetra** — regenerated library, validator, compiler and Lienzos.
-- **Canter** — regenerated source truth, word-level transcript, alignment, source ranges, cutting and exports.
+- **Editorial** — Grid, Board, Timeline, Agenda, Calendar and content library.
+- **Geómetra** — library, validator, compiler and Lienzos.
+- **Canter** — source truth, word-level transcript, alignment, source ranges, cutting and exports.
 - **Review** — corrections, approvals and audit trail.
 - **Publisher** — distribution handoff, scheduling and publication.
 
 ## Vision is transversal
 
-Vision is not only a late-stage generator. Brand will define `BrandVisionProfile`; Content creates `VisualIntent`; Fichas carry `VisualProduction`; Geómetra/Lienzos expose asset slots; Vision produces prompts/assets; Dresser composes them.
+Vision is not only a late-stage generator.
 
-## Vision development / tests
+- Brand defines the visual DNA.
+- Content defines thesis, format and `VisualIntent`.
+- Fichas carry the production structure and prompt slots.
+- Vision improves/compiles the visual production package.
+- Geómetra/Lienzos expose production structure and asset slots.
+- Dresser composes the resulting visual/audio assets into the edit.
+
+## Vision development / validation
 
 ```bash
 npm install
 npm run vision:typecheck
 npm run vision:smoke
+npm run vision:v2:smoke
+npm run vision:mcp:smoke
+npm run vision:pro:mcp:smoke
 npm run vision:build
+```
+
+Run PWA locally:
+
+```bash
+npm run vision:dev
+```
+
+Optional desktop validation:
+
+```bash
 npm run vision:desktop:check
-```
-
-CLI examples:
-
-```bash
-npm run vision:cli -- status
-npm run vision:cli -- prompt --idea "Joc explaining decision criteria" --focal "50mm"
-npm run vision:cli -- storyboard --idea "A client hesitates before signing" --grammar suspense --scenes 2 --shots 4
-```
-
-MCP server:
-
-```bash
-npm run vision:mcp
-```
-
-macOS validation/build/install + GitHub Pages trigger:
-
-```bash
-cd "$HOME/Downloads/abrxs-studio"
-git pull --ff-only origin main
-chmod +x scripts/vision-v02-mac.sh
-./scripts/vision-v02-mac.sh
+npm run vision:desktop:build
 ```
 
 ## Development rules
 
-1. Each app is stabilized independently before it joins the final Studio shell.
-2. Desktop is the reference environment for production-critical media work.
-3. UI is never canonical storage.
-4. Contracts are versioned and migrated explicitly.
-5. Long-running work is represented as Jobs.
-6. MCP calls the same domain/application services as the UI.
-7. Desktop packages frontend assets locally.
-8. Web/PWA exposes every capability that is reliable and secure in-browser.
-9. No global MutationObserver/polling architecture for application state.
-10. Legacy compatibility is implemented through adapters and fixtures, not layered legacy runtimes.
+1. Stabilize each app independently before joining the final Studio shell.
+2. Canonical product data is separate from UI state.
+3. Contracts are versioned and migrated explicitly.
+4. Source truth is never silently rewritten by a visual/prompt tool.
+5. Long-running work becomes Jobs.
+6. MCP/CLI/UI/integrated apps should call the same application services.
+7. Provider availability is capability-driven, not assumed from a provider name.
+8. No provider secret is committed to public frontend code.
+9. Web/PWA exposes every capability that is reliable and secure in-browser.
+10. Tauri/native adapters are used only where native capabilities materially improve the workflow.
+11. Legacy compatibility is implemented through parsers/adapters/fixtures, not stacked runtime patches.
+12. Changes to imported production documents should be auditable and reversible.
 
-See `docs/architecture/FOUNDATION.md`, `docs/architecture/PLATFORM_TARGETS.md`, `docs/architecture/FRONTEND_SYSTEM_V1.md` and `docs/roadmap/PHASES.md`.
+See `docs/architecture/FOUNDATION.md`, `docs/architecture/PLATFORM_TARGETS.md`, `docs/architecture/FRONTEND_SYSTEM_V1.md`, `docs/roadmap/PHASES.md` and `apps/vision/docs/VISION_V2_ARCHITECTURE.md`.
