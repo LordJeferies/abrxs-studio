@@ -1,6 +1,6 @@
 [package]
 name = "abrxs-vision-art-creator"
-version = "0.1.0"
+version = "2.0.0"
 description = "Abrxs Vision Art Creator desktop runtime"
 authors = ["LordJeferies"]
 edition = "2021"
