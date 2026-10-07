@@ -32,6 +32,7 @@ jobs:
       - run: npm run vision:v25:smoke
       - run: npm run vision:assistant:smoke
       - run: npm run vision:mcp:smoke
+      - run: npm run vision:director:mcp:smoke
       - run: npm run vision:pro:mcp:smoke
       - run: npm run vision:build
       - run: npm run vision:desktop:check
@@ -49,7 +50,7 @@ jobs:
           RELEASE_NOTE: ${{ inputs.notes }}
         run: |
           TAG="vision-v2.5.${GITHUB_RUN_NUMBER}"
-          NOTE="Abrxs Vision V2.5 Director Studio stable build from ${GITHUB_SHA}. Base text → directed prompt, visual cinema selectors, suggested presets, V2 core, Fichas, XRoll, Copilot and MCP preserved."
+          NOTE="Abrxs Vision V2.5 Director Studio stable build from ${GITHUB_SHA}. Base text → directed prompt, visual cinema selectors, suggested presets, V2 core, Fichas, XRoll, Copilot, custom providers and MCP preserved."
           if [ -n "${RELEASE_NOTE:-}" ]; then NOTE="$NOTE\n\n$RELEASE_NOTE"; fi
           gh release create "$TAG" \
             dist/vision/Abrxs-Vision-Art-Creator-macOS-v2.5.zip \
