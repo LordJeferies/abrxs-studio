@@ -27,6 +27,8 @@
     "vision:assistant:smoke": "npm run assistant:smoke -w @abrxs/vision",
     "vision:mcp": "npm run mcp -w @abrxs/vision",
     "vision:mcp:smoke": "npm run mcp:smoke -w @abrxs/vision",
+    "vision:director:mcp": "npm run director:mcp -w @abrxs/vision",
+    "vision:director:mcp:smoke": "npm run director:mcp:smoke -w @abrxs/vision",
     "vision:pro:mcp": "npm run pro:mcp -w @abrxs/vision",
     "vision:pro:mcp:smoke": "npm run pro:mcp:smoke -w @abrxs/vision",
     "vision:desktop:dev": "npm run desktop:dev -w @abrxs/vision",
