@@ -1,4 +1,4 @@
-const CACHE = 'abrxs-vision-v2-stable';
+const CACHE = 'abrxs-vision-v2.6-director-intelligence';
 const SHELL = ['./', './manifest.webmanifest', './icon.svg', './guide.html'];
 
 self.addEventListener('install', (event) => {
