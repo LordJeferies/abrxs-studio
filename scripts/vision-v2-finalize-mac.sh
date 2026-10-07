@@ -36,6 +36,7 @@ fi
 
 mkdir -p dist/vision "$HOME/Applications"
 ditto -c -k --sequesterRsrc --keepParent "$APP" dist/vision/Abrxs-Vision-Art-Creator-macOS.zip
+shasum -a 256 dist/vision/Abrxs-Vision-Art-Creator-macOS.zip > dist/vision/Abrxs-Vision-Art-Creator-macOS.sha256
 rm -rf "$HOME/Applications/Abrxs Vision Art Creator.app"
 ditto "$APP" "$HOME/Applications/Abrxs Vision Art Creator.app"
 xattr -dr com.apple.quarantine "$HOME/Applications/Abrxs Vision Art Creator.app" 2>/dev/null || true
@@ -56,10 +57,12 @@ if command -v claude >/dev/null 2>&1; then
 fi
 
 if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
+  gh workflow run vision-pages.yml --ref main || true
+  echo "Vision Pages workflow requested."
   gh workflow run vision-release.yml --ref main || true
   echo "Vision V2 Release workflow requested."
 else
-  echo "GitHub CLI is not authenticated; skipping release workflow trigger."
+  echo "GitHub CLI is not authenticated; skipping Pages/Release workflow dispatch."
 fi
 
 open "$HOME/Applications/Abrxs Vision Art Creator.app"
@@ -68,7 +71,9 @@ echo
 echo "Abrxs Vision V2 local validation complete."
 echo "App: $HOME/Applications/Abrxs Vision Art Creator.app"
 echo "ZIP: $ROOT/dist/vision/Abrxs-Vision-Art-Creator-macOS.zip"
+echo "SHA256: $ROOT/dist/vision/Abrxs-Vision-Art-Creator-macOS.sha256"
 echo "PWA: https://lordjeferies.github.io/abrxs-studio/vision/"
 echo "Product page: https://lordjeferies.github.io/abrxs-studio/vision/about.html"
+echo "Guide: https://lordjeferies.github.io/abrxs-studio/vision/guide.html"
 echo "Latest release: https://github.com/LordJeferies/abrxs-studio/releases/latest"
 echo "Latest macOS download: https://github.com/LordJeferies/abrxs-studio/releases/latest/download/Abrxs-Vision-Art-Creator-macOS.zip"
