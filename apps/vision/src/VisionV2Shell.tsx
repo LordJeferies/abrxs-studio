@@ -1,4 +1,14 @@
-import { BookOpen, Bot, Clapperboard, FileUp, Image as ImageIcon, Layers3, Settings2, Sparkles, WandSparkles } from 'lucide-react';
+import {
+  BookOpen,
+  Bot,
+  Clapperboard,
+  FileUp,
+  Home,
+  Layers3,
+  Settings2,
+  Sparkles,
+  WandSparkles,
+} from 'lucide-react';
 import { useState } from 'react';
 import { CinemaPlaygroundFinal } from './CinemaPlaygroundFinal';
 import { CustomProviderSettings } from './CustomProviderSettings';
@@ -23,61 +33,58 @@ function copy(value: string) {
 export function VisionV2Shell() {
   const { language, setLanguage } = useVisionI18n();
   const es = language === 'es';
-  const [view, setView] = useState<V2View>('home');
+  const [view, setView] = useState<V2View>('prompt');
 
-  if (view === 'home') {
-    return <div className="vision-v2-home">
-      <header className="v2-welcome-top"><div><span className="micro">ABRXS</span><strong>Vision Art Creator <em>V2.6</em></strong></div><div className="v2-language"><button className={language === 'es' ? 'active' : ''} type="button" onClick={() => setLanguage('es')}>ES</button><button className={language === 'en' ? 'active' : ''} type="button" onClick={() => setLanguage('en')}>EN</button></div></header>
-      <main className="v2-welcome-main">
-        <div className="v2-hero">
-          <span className="micro">VISION V2.6 · DIRECTOR INTELLIGENCE</span>
-          <h1>{es ? 'Escribe la idea. Vision entiende y dirige.' : 'Write the idea. Vision understands and directs.'}</h1>
-          <p>{es ? 'Pega Source Truth. Vision analiza intención, sujeto, acción y prioridades visuales; propone decisiones explicadas; te deja compararlas; y compila un prompt ABRAXAS sin reemplazar la idea original.' : 'Paste Source Truth. Vision analyses intent, subject, action and visual priorities; proposes explainable decisions; lets you compare them; and compiles an ABRAXAS prompt without replacing the original idea.'}</p>
-        </div>
-        <div className="v2-primary-actions">
-          <button className="v2-choice primary" type="button" onClick={() => setView('prompt')}><div className="v2-choice-icon"><WandSparkles size={28}/></div><div><span className="micro">VISION DIRECTOR</span><strong>{es ? 'Entender → comparar → dirigir' : 'Understand → compare → direct'}</strong><p>{es ? 'Source Intelligence, recomendaciones explicadas, Reference Engine, Prompt Anatomy con leyenda y compilación de producción.' : 'Source Intelligence, explainable recommendations, Reference Engine, Prompt Anatomy legend and production compilation.'}</p></div><i>→</i></button>
-          <button className="v2-choice" type="button" onClick={() => setView('assistant')}><div className="v2-choice-icon"><Bot size={28}/></div><div><span className="micro">VISION COPILOT</span><strong>{es ? 'Pensar y dirigir con IA' : 'Think and direct with AI'}</strong><p>{es ? 'NVIDIA NIM o Gemini para revisar, explicar y proponer patches que tú apruebas.' : 'NVIDIA NIM or Gemini to review, explain and propose patches that you approve.'}</p></div><i>→</i></button>
-        </div>
-        <div className="v2-secondary-actions">
-          <button type="button" onClick={() => setView('studio')}><ImageIcon size={19}/><div><strong>{es ? 'Producción / Studio' : 'Production / Studio'}</strong><span>{es ? 'Imagen · video · storyboard · providers' : 'Image · video · storyboard · providers'}</span></div></button>
-          <button type="button" onClick={() => setView('ficha')}><FileUp size={19}/><div><strong>{es ? 'Importar ficha' : 'Import ficha'}</strong><span>HTML · JSON · TXT</span></div></button>
-          <button type="button" onClick={() => setView('xroll')}><Layers3 size={19}/><div><strong>XRoll Studio</strong><span>Layers · prompts · motion</span></div></button>
-          <button type="button" onClick={() => setView('learn')}><BookOpen size={19}/><div><strong>Cinema Playground</strong><span>{es ? 'Laboratorio avanzado de comparación' : 'Advanced comparison lab'}</span></div></button>
-        </div>
-        <section className="v2-principle"><Sparkles size={18}/><div><strong>{es ? 'Una sola intención. Muchas salidas.' : 'One intent. Many outputs.'}</strong><p>{es ? 'Source Truth permanece separada de la dirección. Vision propone. Tú aplicas. Target compilers traducen. Generación sólo ocurre mediante providers reales y confirmados.' : 'Source Truth stays separate from direction. Vision proposes. You apply. Target compilers translate. Generation only happens through real confirmed providers.'}</p></div></section>
-      </main>
-    </div>;
-  }
+  const title = view === 'prompt' ? 'Director' : view === 'assistant' ? 'Copilot' : view === 'ficha' ? 'Fichas' : view === 'xroll' ? 'XRoll' : view === 'learn' ? 'References' : view === 'studio' ? 'Studio' : view === 'settings' ? 'Settings' : 'Vision';
 
-  return <div className="vision-v2-shell">
-    <header className="v2-switcher">
-      <button className="v2-logo" type="button" onClick={() => setView('home')}><span>V</span><div><strong>Vision V2.6</strong><small>Director Intelligence</small></div></button>
+  return <div className="vision-v26-app">
+    <aside className="v26-global-rail" aria-label="Vision navigation">
+      <button className="v26-global-logo" type="button" onClick={() => setView('home')} aria-label="Abrxs Vision home"><span>V</span></button>
+
       <nav>
-        <button className={view === 'prompt' ? 'active' : ''} type="button" onClick={() => setView('prompt')}><WandSparkles size={15}/>Director</button>
-        <button className={view === 'assistant' ? 'active' : ''} type="button" onClick={() => setView('assistant')}><Bot size={15}/>Copilot</button>
-        <button className={view === 'ficha' ? 'active' : ''} type="button" onClick={() => setView('ficha')}><FileUp size={15}/>Fichas</button>
-        <button className={view === 'xroll' ? 'active' : ''} type="button" onClick={() => setView('xroll')}><Layers3 size={15}/>XRoll</button>
-        <button className={view === 'learn' ? 'active' : ''} type="button" onClick={() => setView('learn')}><BookOpen size={15}/>{es ? 'Aprender' : 'Learn'}</button>
-        <button className={view === 'studio' ? 'active' : ''} type="button" onClick={() => setView('studio')}><Clapperboard size={15}/>Studio</button>
+        <button className={view === 'home' ? 'active' : ''} type="button" onClick={() => setView('home')} title={es ? 'Inicio' : 'Home'}><Home size={20}/><span>{es ? 'Inicio' : 'Home'}</span></button>
+        <button className={view === 'prompt' ? 'active' : ''} type="button" onClick={() => setView('prompt')} title="Director"><WandSparkles size={20}/><span>Director</span></button>
+        <button className={view === 'assistant' ? 'active' : ''} type="button" onClick={() => setView('assistant')} title="Copilot"><Bot size={20}/><span>Copilot</span></button>
+        <button className={view === 'ficha' ? 'active' : ''} type="button" onClick={() => setView('ficha')} title={es ? 'Fichas' : 'Fichas'}><FileUp size={20}/><span>Fichas</span></button>
+        <button className={view === 'xroll' ? 'active' : ''} type="button" onClick={() => setView('xroll')} title="XRoll"><Layers3 size={20}/><span>XRoll</span></button>
+        <button className={view === 'learn' ? 'active' : ''} type="button" onClick={() => setView('learn')} title={es ? 'Referencias' : 'References'}><BookOpen size={20}/><span>{es ? 'Refs' : 'Refs'}</span></button>
+        <button className={view === 'studio' ? 'active' : ''} type="button" onClick={() => setView('studio')} title="Studio"><Clapperboard size={20}/><span>Studio</span></button>
       </nav>
-      <div className="v2-switcher-actions"><button type="button" onClick={() => setLanguage(language === 'es' ? 'en' : 'es')}>{language.toUpperCase()}</button><button className={view === 'settings' ? 'active' : ''} type="button" onClick={() => setView('settings')} title={es ? 'Conexiones y API keys' : 'Connections and API keys'}><Settings2 size={16}/></button></div>
-    </header>
 
-    <main className="v2-workspace">
-      {view === 'prompt' && <div className="v25-prompt-route">
-        <DirectorStudioV26 language={language} onOpenCopilot={() => setView('assistant')} onOpenStudio={() => setView('studio')}/>
-        <details className="v25-advanced-compiler">
-          <summary><Sparkles size={15}/><span><strong>{es ? 'Herramientas V2 / V2.5 conservadas' : 'Preserved V2 / V2.5 tools'}</strong><small>{es ? 'Director V2.5 original, compilador avanzado y Prompt Anatomy clásico siguen disponibles para compatibilidad y comparación.' : 'Original V2.5 Director, advanced compiler and classic Prompt Anatomy remain available for compatibility and comparison.'}</small></span></summary>
-          <DirectorStudioFinal language={language} onOpenCopilot={() => setView('assistant')} onOpenStudio={() => setView('studio')}/>
-          <div className="v2-prompt-workspace"><div className="v2-prompt-tools"><ProfessionalPromptLab/></div><PromptAnatomy language={language} onCopy={copy}/></div>
-        </details>
-      </div>}
-      {view === 'assistant' && <VisionCopilot language={language} onOpenSettings={() => setView('settings')} onOpenPromptStudio={() => setView('prompt')} onOpenXRoll={() => setView('xroll')}/>} 
-      {view === 'settings' && <div className="vision-v2-settings-stack"><VisionAISettings language={language}/><CustomProviderSettings language={language}/><VisionFirebaseSettings language={language}/></div>} 
-      {view === 'ficha' && <FichaIntakePanel language={language} onCopy={copy}/>} 
-      {view === 'xroll' && <XRollStudio language={language} onCopy={copy}/>} 
-      {view === 'learn' && <CinemaPlaygroundFinal language={language}/>} 
-      {view === 'studio' && <VisionApp/>}
-    </main>
+      <div className="v26-global-bottom">
+        <button className="v26-language-button" type="button" onClick={() => setLanguage(language === 'es' ? 'en' : 'es')} title={es ? 'Cambiar idioma' : 'Change language'}>{language.toUpperCase()}</button>
+        <button className={view === 'settings' ? 'active' : ''} type="button" onClick={() => setView('settings')} title={es ? 'Conexiones y ajustes' : 'Connections and settings'}><Settings2 size={20}/><span>{es ? 'Ajustes' : 'Settings'}</span></button>
+      </div>
+    </aside>
+
+    <section className="v26-global-main">
+      <header className="v26-global-topbar">
+        <div><span>ABRAXS VISION</span><strong>{title}</strong></div>
+        <div><small>V2.6</small><span className="v26-status-dot"/> <em>{es ? 'Source Truth protegido' : 'Source Truth protected'}</em></div>
+      </header>
+
+      <main className="v26-route-content">
+        {view === 'home' && <section className="v26-home">
+          <div className="v26-home-hero"><span className="micro">ABRAXS VISION V2.6</span><h1>{es ? 'Un espacio visual. Una decisión a la vez.' : 'One visual workspace. One decision at a time.'}</h1><p>{es ? 'Director es el punto de entrada. Pega una idea, revisa referencias fotográficas, compara opciones y compila el prompt sin perder Source Truth.' : 'Director is the entry point. Paste an idea, inspect photographic references, compare options and compile the prompt without losing Source Truth.'}</p><button className="v26-primary" onClick={() => setView('prompt')}><WandSparkles size={16}/>{es ? 'Abrir Director' : 'Open Director'}</button></div>
+          <div className="v26-home-tools"><button onClick={() => setView('assistant')}><Bot size={20}/><span><strong>Copilot</strong><small>{es ? 'Analizar y proponer cambios' : 'Analyse and propose changes'}</small></span></button><button onClick={() => setView('learn')}><BookOpen size={20}/><span><strong>{es ? 'Referencias' : 'References'}</strong><small>{es ? 'Comparación avanzada' : 'Advanced comparison'}</small></span></button><button onClick={() => setView('studio')}><Sparkles size={20}/><span><strong>Studio</strong><small>{es ? 'Preparar producción' : 'Prepare production'}</small></span></button></div>
+        </section>}
+
+        {view === 'prompt' && <div className="v26-director-route">
+          <DirectorStudioV26 language={language} onOpenCopilot={() => setView('assistant')} onOpenStudio={() => setView('studio')}/>
+          <details className="v26-legacy-tools">
+            <summary><Sparkles size={14}/><span><strong>{es ? 'Herramientas avanzadas / compatibilidad V2.5' : 'Advanced / V2.5 compatibility tools'}</strong><small>{es ? 'Abre sólo si necesitas el Director clásico o el compilador por bloques.' : 'Open only if you need the classic Director or block compiler.'}</small></span></summary>
+            <DirectorStudioFinal language={language} onOpenCopilot={() => setView('assistant')} onOpenStudio={() => setView('studio')}/>
+            <div className="v2-prompt-workspace"><div className="v2-prompt-tools"><ProfessionalPromptLab/></div><PromptAnatomy language={language} onCopy={copy}/></div>
+          </details>
+        </div>}
+
+        {view === 'assistant' && <VisionCopilot language={language} onOpenSettings={() => setView('settings')} onOpenPromptStudio={() => setView('prompt')} onOpenXRoll={() => setView('xroll')}/>} 
+        {view === 'settings' && <div className="vision-v2-settings-stack"><VisionAISettings language={language}/><CustomProviderSettings language={language}/><VisionFirebaseSettings language={language}/></div>} 
+        {view === 'ficha' && <FichaIntakePanel language={language} onCopy={copy}/>} 
+        {view === 'xroll' && <XRollStudio language={language} onCopy={copy}/>} 
+        {view === 'learn' && <CinemaPlaygroundFinal language={language}/>} 
+        {view === 'studio' && <VisionApp/>}
+      </main>
+    </section>
   </div>;
 }
