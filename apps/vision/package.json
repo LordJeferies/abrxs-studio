@@ -16,6 +16,8 @@
     "v25:smoke": "tsx cli/v25-smoke.ts",
     "mcp": "tsx mcp/server.ts",
     "mcp:smoke": "tsx mcp/smoke.ts",
+    "director:mcp": "tsx mcp/director-server.ts",
+    "director:mcp:smoke": "tsx mcp/director-smoke.ts",
     "pro:mcp": "tsx mcp/professional-server.ts",
     "pro:mcp:smoke": "tsx mcp/professional-smoke.ts",
     "icon": "tauri icon src-tauri/icons/app-icon.svg",
