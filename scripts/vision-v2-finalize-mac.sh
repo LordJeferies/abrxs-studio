@@ -7,7 +7,7 @@ cd "$ROOT"
 git config core.fileMode false
 
 if [ -n "$(git status --porcelain)" ]; then
-  STASH_NAME="pre-vision-v2-finalize-$(date +%Y%m%d-%H%M%S)"
+  STASH_NAME="pre-vision-v25-finalize-$(date +%Y%m%d-%H%M%S)"
   echo "Local changes detected. Saving them as stash: $STASH_NAME"
   git stash push -u -m "$STASH_NAME"
 fi
@@ -21,8 +21,10 @@ npm install
 npm run vision:typecheck
 npm run vision:smoke
 npm run vision:v2:smoke
+npm run vision:v25:smoke
 npm run vision:assistant:smoke
 npm run vision:mcp:smoke
+npm run vision:director:mcp:smoke
 npm run vision:pro:mcp:smoke
 npm run vision:build
 npm run vision:desktop:check
@@ -35,18 +37,22 @@ if [ -z "$APP" ]; then
 fi
 
 mkdir -p dist/vision "$HOME/Applications"
-ditto -c -k --sequesterRsrc --keepParent "$APP" dist/vision/Abrxs-Vision-Art-Creator-macOS.zip
-shasum -a 256 dist/vision/Abrxs-Vision-Art-Creator-macOS.zip > dist/vision/Abrxs-Vision-Art-Creator-macOS.sha256
+ditto -c -k --sequesterRsrc --keepParent "$APP" dist/vision/Abrxs-Vision-Art-Creator-macOS-v2.5.zip
+shasum -a 256 dist/vision/Abrxs-Vision-Art-Creator-macOS-v2.5.zip > dist/vision/Abrxs-Vision-Art-Creator-macOS-v2.5.sha256
 rm -rf "$HOME/Applications/Abrxs Vision Art Creator.app"
 ditto "$APP" "$HOME/Applications/Abrxs Vision Art Creator.app"
 xattr -dr com.apple.quarantine "$HOME/Applications/Abrxs Vision Art Creator.app" 2>/dev/null || true
 
-chmod +x scripts/vision-mcp-server.sh
+chmod +x scripts/vision-mcp-server.sh scripts/vision-director-mcp-server.sh
 MCP_SCRIPT="$ROOT/scripts/vision-mcp-server.sh"
+DIRECTOR_MCP_SCRIPT="$ROOT/scripts/vision-director-mcp-server.sh"
 
 if command -v codex >/dev/null 2>&1; then
   if ! codex mcp list 2>/dev/null | grep -q 'abrxs-vision'; then
     codex mcp add abrxs-vision -- "$MCP_SCRIPT" || true
+  fi
+  if ! codex mcp list 2>/dev/null | grep -q 'abrxs-vision-director'; then
+    codex mcp add abrxs-vision-director -- "$DIRECTOR_MCP_SCRIPT" || true
   fi
 fi
 
@@ -54,26 +60,27 @@ if command -v claude >/dev/null 2>&1; then
   if ! claude mcp list 2>/dev/null | grep -q 'abrxs-vision'; then
     claude mcp add --transport stdio --scope user abrxs-vision -- "$MCP_SCRIPT" || true
   fi
+  if ! claude mcp list 2>/dev/null | grep -q 'abrxs-vision-director'; then
+    claude mcp add --transport stdio --scope user abrxs-vision-director -- "$DIRECTOR_MCP_SCRIPT" || true
+  fi
 fi
 
 if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
   gh workflow run vision-pages.yml --ref main || true
   echo "Vision Pages workflow requested."
-  gh workflow run vision-release.yml --ref main || true
-  echo "Vision V2 Release workflow requested."
 else
-  echo "GitHub CLI is not authenticated; skipping Pages/Release workflow dispatch."
+  echo "GitHub CLI is not authenticated; skipping Pages workflow dispatch."
 fi
 
 open "$HOME/Applications/Abrxs Vision Art Creator.app"
 
 echo
-echo "Abrxs Vision V2 local validation complete."
+echo "Abrxs Vision V2.5 local validation complete."
 echo "App: $HOME/Applications/Abrxs Vision Art Creator.app"
-echo "ZIP: $ROOT/dist/vision/Abrxs-Vision-Art-Creator-macOS.zip"
-echo "SHA256: $ROOT/dist/vision/Abrxs-Vision-Art-Creator-macOS.sha256"
+echo "ZIP: $ROOT/dist/vision/Abrxs-Vision-Art-Creator-macOS-v2.5.zip"
+echo "SHA256: $ROOT/dist/vision/Abrxs-Vision-Art-Creator-macOS-v2.5.sha256"
 echo "PWA: https://lordjeferies.github.io/abrxs-studio/vision/"
 echo "Product page: https://lordjeferies.github.io/abrxs-studio/vision/about.html"
 echo "Guide: https://lordjeferies.github.io/abrxs-studio/vision/guide.html"
 echo "Latest release: https://github.com/LordJeferies/abrxs-studio/releases/latest"
-echo "Latest macOS download: https://github.com/LordJeferies/abrxs-studio/releases/latest/download/Abrxs-Vision-Art-Creator-macOS.zip"
+echo "Latest macOS download: https://github.com/LordJeferies/abrxs-studio/releases/latest/download/Abrxs-Vision-Art-Creator-macOS-v2.5.zip"
