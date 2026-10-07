@@ -1,6 +1,6 @@
 {
   "name": "@abrxs/vision",
-  "version": "2.0.0",
+  "version": "2.5.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -13,6 +13,7 @@
     "smoke": "tsx cli/vision-cli.ts smoke",
     "v2:smoke": "tsx cli/v2-smoke.ts",
     "assistant:smoke": "tsx cli/assistant-smoke.ts",
+    "v25:smoke": "tsx cli/v25-smoke.ts",
     "mcp": "tsx mcp/server.ts",
     "mcp:smoke": "tsx mcp/smoke.ts",
     "pro:mcp": "tsx mcp/professional-server.ts",
