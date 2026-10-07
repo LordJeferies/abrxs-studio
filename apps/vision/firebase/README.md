@@ -8,7 +8,8 @@ Implemented:
 - `/health`
 - `/assistant` with NVIDIA NIM
 - `/assistant` with Gemini API
-- optional Firebase App Check verification
+- Firebase App Check token support in the Vision PWA
+- optional/enforceable App Check verification in the function
 - strict CORS target for the public Vision origin
 
 Prepared but intentionally disabled:
@@ -20,6 +21,8 @@ Generation remains disabled until each provider adapter validates credentials, c
 
 Requirements:
 - Firebase CLI authenticated to the Firebase project you want to use;
+- a Firebase Web App registered in that project;
+- reCAPTCHA Enterprise configured as the App Check provider for that Web App;
 - a project with Cloud Functions enabled;
 - NVIDIA and/or Gemini API keys.
 
@@ -33,7 +36,7 @@ npm install
 npm run build
 ```
 
-Set secrets:
+Set provider secrets. The CLI asks for the values without placing them in source code:
 
 ```bash
 firebase functions:secrets:set NVIDIA_API_KEY
@@ -44,7 +47,7 @@ Set runtime parameters when prompted/deploying:
 
 ```text
 VISION_ALLOWED_ORIGIN=https://lordjeferies.github.io
-VISION_REQUIRE_APP_CHECK=false
+VISION_REQUIRE_APP_CHECK=true
 ```
 
 Deploy:
@@ -54,14 +57,19 @@ cd ..
 firebase deploy --only functions
 ```
 
-After deploy, copy the HTTPS URL of `visionGateway` into Vision → Settings → Vision Cloud Gateway.
+After deploy:
+1. Copy the HTTPS URL of `visionGateway` into Vision → Settings → Vision Cloud Gateway.
+2. In Firebase Console, copy the public Web App config object into Vision → Settings → Firebase App Check.
+3. Copy the public reCAPTCHA Enterprise site key into the same Settings panel.
+4. Save App Check and test Vision Copilot from the PWA.
+
+The Firebase Web App config and reCAPTCHA site key are public client configuration. NVIDIA/Gemini master provider keys remain only in Secret Manager.
 
 ## Production hardening
 
-Before treating the public gateway as production-ready:
-- enable Firebase Auth if account-level access is needed;
-- configure Firebase App Check for the web app;
-- set `VISION_REQUIRE_APP_CHECK=true`;
+Before broad public use:
+- monitor App Check metrics and enforce App Check;
+- enable Firebase Auth if account-level access/project sync is needed;
 - add request/rate quotas;
 - keep provider secrets only in Secret Manager;
 - add provider-specific generation adapters behind explicit spend confirmation;
