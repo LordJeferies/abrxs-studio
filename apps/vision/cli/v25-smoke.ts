@@ -3,12 +3,12 @@ import {
   DIRECTOR_CATEGORIES,
   DIRECTOR_OPTIONS,
   DIRECTOR_PRESETS,
-  anatomizePrompt,
   auditDirectorPrompt,
   compileDirectorPrompt,
   recommendPresets,
   selectionsFromPreset,
 } from '../src/directorFinal';
+import { anatomizePromptV25 } from '../src/promptAnatomyV25';
 
 const source = 'A decision-maker compares three equivalent proposals at a real work table because there is no clear criterion for choosing. The camera should make the pressure visible without turning the scene into an action movie.';
 
@@ -56,11 +56,13 @@ assert.ok(result.decisions.some((decision) => decision.category === 'lighting'))
 assert.ok(result.decisions.some((decision) => decision.category === 'subjectMotion'));
 assert.ok(result.decisions.some((decision) => decision.category === 'material'));
 
-const anatomy = anatomizePrompt(result.prompt);
+const anatomy = anatomizePromptV25(result.prompt);
 assert.ok(anatomy.length > 12);
 assert.ok(anatomy.some((segment) => segment.category === 'lens'));
 assert.ok(anatomy.some((segment) => segment.category === 'lighting'));
 assert.ok(anatomy.some((segment) => segment.category === 'movement'));
+assert.ok(anatomy.some((segment) => segment.category === 'shutter'));
+assert.ok(anatomy.some((segment) => segment.category === 'frameRate'));
 
 const audit = auditDirectorPrompt(result.prompt, 'video');
 assert.ok(audit.score >= 90, `expected directed prompt score >= 90, got ${audit.score}`);
@@ -82,6 +84,6 @@ console.log('✓ 18+ director dimensions and 100+ visual options');
 console.log('✓ semantic preset recommendations from base text');
 console.log('✓ base text → ABRAXAS directed video prompt');
 console.log('✓ camera/exposure/cadence/light/motion/material continuity');
-console.log('✓ inline prompt anatomy remains available');
+console.log('✓ precise inline Prompt Anatomy classification');
 console.log('✓ directed prompt quality audit');
 console.log('✓ XRoll-specific production contract');
