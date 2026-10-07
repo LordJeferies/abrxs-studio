@@ -2,21 +2,18 @@ import { Check, ChevronRight, Copy, Eye, EyeOff, HelpCircle, Image as ImageIcon,
 import { useMemo, useRef, useState } from 'react';
 import {
   DIRECTOR_CATEGORIES,
-  DIRECTOR_OPTIONS,
-  DIRECTOR_PRESETS,
-  anatomizePrompt,
   auditDirectorPrompt,
   compileDirectorPrompt,
   optionById,
   optionsFor,
   recommendPresets,
-  selectionsFromPreset,
   type DirectorCategory,
   type DirectorMode,
   type DirectorOption,
   type DirectorPreset,
   type DirectorSelections,
 } from './directorFinal';
+import { anatomizePromptV25 } from './promptAnatomyV25';
 
 type Props = {
   language: 'es' | 'en';
@@ -30,7 +27,7 @@ const BASE_ES = 'Un decisor compara tres propuestas visualmente equivalentes sob
 const BASE_EN = 'A decision-maker compares three visually equivalent proposals on a real work table. The video should show that indecision does not come from having too few options, but from lacking a clear criterion for comparing them.';
 
 const ANATOMY_COLORS: Record<string, string> = {
-  intent: '#c49aee', subject: '#75d7e7', action: '#f0a66d', scene: '#70c9b4', shot: '#8bb6ff', camera: '#8bb6ff', lens: '#8ed29a', angle: '#8bb6ff', aperture: '#8ed29a', focus: '#8ed29a', shutter: '#7bbbd5', frameRate: '#7bbbd5', whiteBalance: '#efc36f', composition: '#80a9ef', lighting: '#efc36f', movement: '#ee9b64', subjectMotion: '#ee9b64', environmentMotion: '#d59e72', look: '#d79cd0', atmosphere: '#78b8b0', material: '#c5a27a', fx: '#e48b9c', output: '#aab4c5',
+  intent: '#c49aee', subject: '#75d7e7', action: '#f0a66d', scene: '#70c9b4', shot: '#8bb6ff', camera: '#8bb6ff', lens: '#8ed29a', angle: '#8bb6ff', aperture: '#8ed29a', focus: '#8ed29a', shutter: '#7bbbd5', frameRate: '#7bbbd5', whiteBalance: '#efc36f', composition: '#80a9ef', lighting: '#efc36f', movement: '#ee9b64', subjectMotion: '#ee9b64', environmentMotion: '#d59e72', look: '#d79cd0', atmosphere: '#78b8b0', material: '#c5a27a', fx: '#e48b9c', output: '#aab4c5', continuity: '#b9a6db', constraints: '#e58f8f', text: '#df9fcf',
 };
 
 function loadJson<T>(key: string, fallback: T): T {
@@ -88,7 +85,7 @@ export function DirectorStudioFinal({ language, onOpenCopilot, onOpenStudio }: P
   const recommended = useMemo(() => recommendPresets(source, mode, 6), [source, mode]);
   const compiled = useMemo(() => compileDirectorPrompt({ sourceText: source, mode, selections, aspect, duration, preserveText }), [source, mode, selections, aspect, duration, preserveText]);
   const audit = useMemo(() => auditDirectorPrompt(compiled.prompt, mode), [compiled.prompt, mode]);
-  const anatomySegments = useMemo(() => anatomizePrompt(compiled.prompt), [compiled.prompt]);
+  const anatomySegments = useMemo(() => anatomizePromptV25(compiled.prompt), [compiled.prompt]);
   const visibleCategories = DIRECTOR_CATEGORIES.filter((item) => item.group === activeGroup);
   const options = optionsFor(activeCategory);
   const activeOption = optionById(selections[activeCategory]);
@@ -122,7 +119,7 @@ export function DirectorStudioFinal({ language, onOpenCopilot, onOpenStudio }: P
 
   return <section className="v25f-shell">
     <header className="v25f-head">
-      <div><span className="micro">ABRXS VISION V2.5 · DIRECTOR STUDIO</span><h1>{es ? 'Texto base → dirección de cine → prompt de producción.' : 'Base text → cinematic direction → production prompt.'}</h1><p>{es ? 'Escribe qué pasa. Después elige cómo debe verse: cámara, focal, exposición, composición, luz, movimiento, look, materiales y FX. Cada elección tiene referencia y explicación.' : 'Write what happens. Then choose how it should look: camera, focal length, exposure, composition, light, motion, look, materials and FX. Every choice has a reference and explanation.'}</p></div>
+      <div><span className="micro">ABRAXS VISION V2.5 · DIRECTOR STUDIO</span><h1>{es ? 'Texto base → dirección de cine → prompt de producción.' : 'Base text → cinematic direction → production prompt.'}</h1><p>{es ? 'Escribe qué pasa. Después elige cómo debe verse: cámara, focal, exposición, composición, luz, movimiento, look, materiales y FX. Cada elección tiene referencia y explicación.' : 'Write what happens. Then choose how it should look: camera, focal length, exposure, composition, light, motion, look, materials and FX. Every choice has a reference and explanation.'}</p></div>
       <div className="v25f-mode"><button className={mode === 'image' ? 'active' : ''} onClick={() => selectMode('image')}><ImageIcon size={15}/>{es ? 'Imagen' : 'Image'}</button><button className={mode === 'video' ? 'active' : ''} onClick={() => selectMode('video')}><Video size={15}/>Video</button><button className={mode === 'xroll' ? 'active' : ''} onClick={() => selectMode('xroll')}><Layers3 size={15}/>XRoll</button></div>
     </header>
 
