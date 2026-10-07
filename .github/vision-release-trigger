@@ -1,3 +1,3 @@
-Abrxs Vision Art Creator V2
-release-trigger: 2026-10-07T16:35Z
-purpose: dispatch the stable Vision V2 macOS release workflow after the trigger workflow is present on main
+Abrxs Vision Art Creator V2.5 Director Studio
+release-trigger: 2026-10-07T18:22Z
+purpose: publish the stable V2.5 macOS build after Director Studio, base-text compilation, visual cinema selectors, suggested presets and V2.5 smoke gates landed on main
