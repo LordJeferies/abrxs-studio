@@ -35,12 +35,13 @@ assert.ok(parsed.slots.some((slot) => slot.breadcrumb.includes('cover') && slot.
 const target = parsed.slots.find((slot) => slot.kind === 'asset-override');
 assert.ok(target);
 const improved = improveFichaPrompt(target, { language: 'es' });
+assert.match(improved, /ABRAXAS/);
 assert.match(improved, /ROL/);
 assert.match(improved, /CONTINUIDAD/);
 assert.match(improved, /PROMPT ORIGINAL/);
 const patched = applyFichaPatches(parsed, [{ slotId: target.id, before: target.prompt, after: improved }]);
 assert.match(patched, /canvas code stays/);
-assert.match(patched, /VISION V2/);
+assert.match(patched, /ABRAXAS/);
 assert.match(patched, /old part prompt/);
 
 const appDataHtml = `<!doctype html><script id="app-data" type="application/json">${JSON.stringify({ schemaVersion: 'abrxos.alpha.story-editor.r10.1', projectId: 'JOC55', pieces: [{ id: 'x', cover: { prompt: 'cover' }, timeline: [{ track: 'xr', asset: { assetId: 'A01', promptNoText: 'asset no text', promptWithText: 'asset with text' } }] }] })}</script>`;
