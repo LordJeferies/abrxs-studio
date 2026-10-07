@@ -18,7 +18,8 @@ export type AssistantPreferences = {
 
 export type AssistantMessage = { role: 'user' | 'assistant'; content: string };
 
-type TauriWindow = Window & { __TAURI__?: { core?: { invoke?: <T>(command: string, args?: Record<string, unknown>) => Promise<T> } } } };
+type TauriInvoke = (command: string, args?: Record<string, unknown>) => Promise<unknown>;
+type TauriWindow = Window & { __TAURI__?: { core?: { invoke?: TauriInvoke } } };
 
 export function isVisionDesktop() {
   return Boolean((window as TauriWindow).__TAURI__?.core?.invoke);
@@ -27,7 +28,7 @@ export function isVisionDesktop() {
 async function invoke<T>(command: string, args?: Record<string, unknown>): Promise<T> {
   const fn = (window as TauriWindow).__TAURI__?.core?.invoke;
   if (!fn) throw new Error('Esta operación requiere Abrxs Vision Desktop.');
-  return fn<T>(command, args);
+  return await fn(command, args) as T;
 }
 
 export function loadAssistantPreferences(): AssistantPreferences {
