@@ -1,12 +1,12 @@
 {
-  "name": "Abrxs Vision Art Creator",
+  "name": "Abrxs Vision Art Creator V2",
   "short_name": "Abrxs Vision",
-  "description": "Offline-first cinematic prompt, storyboard, carousel and visual direction studio.",
+  "description": "PWA-first visual direction, professional prompt, ficha intake, XRoll, storyboard and carousel production studio.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#09090a",
-  "theme_color": "#09090a",
+  "background_color": "#090a0c",
+  "theme_color": "#090a0c",
   "orientation": "any",
   "categories": ["photo", "video", "productivity", "design"],
   "icons": [
@@ -19,12 +19,12 @@
   ],
   "shortcuts": [
     {
-      "name": "Quick Creator",
-      "short_name": "Quick",
+      "name": "Vision V2",
+      "short_name": "Vision",
       "url": "./"
     },
     {
-      "name": "How to use",
+      "name": "How to use Vision V2",
       "short_name": "Guide",
       "url": "./guide.html"
     }
