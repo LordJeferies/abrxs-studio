@@ -1,4 +1,4 @@
-import { getAppCheck, initializeApp } from 'firebase-admin/app-check';
+import { getAppCheck } from 'firebase-admin/app-check';
 import { applicationDefault, getApps, initializeApp as initializeAdminApp } from 'firebase-admin/app';
 import { defineSecret, defineString } from 'firebase-functions/params';
 import { onRequest } from 'firebase-functions/v2/https';
