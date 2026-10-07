@@ -22,6 +22,7 @@ jobs:
       - run: npm run vision:v25:smoke
       - run: npm run vision:assistant:smoke
       - run: npm run vision:mcp:smoke
+      - run: npm run vision:director:mcp:smoke
       - run: npm run vision:pro:mcp:smoke
       - run: npm run vision:build
       - name: Build Vision Firebase gateway
@@ -60,6 +61,7 @@ jobs:
       - run: npm run vision:v25:smoke
       - run: npm run vision:assistant:smoke
       - run: npm run vision:mcp:smoke
+      - run: npm run vision:director:mcp:smoke
       - run: npm run vision:pro:mcp:smoke
       - run: npm run vision:build
       - run: npm run vision:desktop:check
