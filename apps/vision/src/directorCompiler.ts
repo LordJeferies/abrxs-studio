@@ -1,4 +1,5 @@
 import { DIRECTOR_OPTIONS, DIRECTOR_PRESETS, optionById, type DirectorCategory, type DirectorPreset } from './directorCatalog';
+import { technicalPromptFragments, type TechnicalDirectorState } from './technicalDirector';
 
 export type DirectorOutputMode = 'image' | 'video' | 'xroll';
 export type DirectorSelections = Partial<Record<DirectorCategory, string>>;
@@ -8,6 +9,7 @@ export type DirectedPrompt = {
   mode: DirectorOutputMode;
   prompt: string;
   decisions: Array<{ category: DirectorCategory; label: string; prompt: string }>;
+  technical: string[];
   missing: DirectorCategory[];
 };
 
@@ -37,17 +39,25 @@ export function compileDirectedPrompt(
   sourceText: string,
   mode: DirectorOutputMode,
   selections: DirectorSelections,
-  options: { useSuggestedDefaults?: boolean; aspect?: string; duration?: string; preserveText?: boolean } = {},
+  options: {
+    useSuggestedDefaults?: boolean;
+    aspect?: string;
+    duration?: string;
+    preserveText?: boolean;
+    technical?: TechnicalDirectorState;
+  } = {},
 ): DirectedPrompt {
   const merged = resolvedSelections(mode, selections, options.useSuggestedDefaults ?? true);
   const decisions = (Object.entries(merged) as Array<[DirectorCategory, string]>).flatMap(([category, id]) => {
     const found = DIRECTOR_OPTIONS.find((item) => item.category === category && item.id === id);
     return found ? [{ category, label: found.label, prompt: found.prompt }] : [];
   });
+  const technical = technicalPromptFragments(options.technical ?? {});
   const essential = ESSENTIAL_BY_MODE[mode];
   const missing = essential.filter((category) => !selections[category]);
   const source = normalizeSentence(sourceText);
   const visualLanguage = decisions.map((decision) => decision.prompt).join('; ');
+  const technicalLanguage = technical.length ? technical.join('; ') : 'use a physically coherent cinema capture system appropriate to the selected lens and motion';
   const aspect = options.aspect || (mode === 'image' ? '4:5' : '9:16');
   const duration = options.duration || (mode === 'video' ? '6–8 seconds' : mode === 'xroll' ? '5–7 seconds' : 'single frame');
   const temporal = mode === 'image'
@@ -65,6 +75,7 @@ export function compileDirectedPrompt(
   const prompt = [
     `SOURCE INTENT — ${source}`,
     `VISUAL DIRECTION — ${visualLanguage}.`,
+    `CAMERA / EXPOSURE / CADENCE — ${technicalLanguage}.`,
     `TEMPORAL / FRAME LOGIC — ${temporal}`,
     `CONTINUITY — Keep identity, wardrobe, environment geography, light direction, palette and optical treatment stable unless the source text explicitly requires a change.`,
     `TEXT — ${textRule}`,
@@ -72,7 +83,7 @@ export function compileDirectedPrompt(
     `OUTPUT — ${aspect}, ${duration}, production-ready ${mode === 'image' ? 'image' : mode === 'video' ? 'video shot' : 'XRoll package'}, physically plausible, clean focal hierarchy and no generic AI gloss.`,
   ].join('\n\n');
 
-  return { sourceText, mode, prompt, decisions, missing };
+  return { sourceText, mode, prompt, decisions, technical, missing };
 }
 
 export function selectionsFromPreset(preset: DirectorPreset): DirectorSelections {
