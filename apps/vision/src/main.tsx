@@ -12,6 +12,7 @@ import './v2stable.css';
 import './v2learning.css';
 import './v2prompt.css';
 import './v2copilot.css';
+import './v2cloud.css';
 import { VisionI18nProvider } from './i18n';
 import { registerVisionPwa } from './pwa';
 import { VisionV2Shell } from './VisionV2Shell';
