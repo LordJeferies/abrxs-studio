@@ -94,7 +94,7 @@ export function compileContentVision(request: ContentVisionRequest): VisionConte
 
   const mode = request.mode ?? (visual.xroll?.enabled ? 'text-to-video' : 'text-to-image');
   const target = request.target ?? 'generic-production';
-  const intent = request.intent ?? (visual.xroll?.enabled ? 'social-visual' : 'editorial-visual');
+  const intent: GenerationIntent = request.intent ?? (visual.xroll?.enabled ? 'social-hook' : (String(visual.format ?? '').toLowerCase().includes('carousel') ? 'carousel' : 'education'));
   const prompt = compileProfessionalPrompt({
     director,
     target,
