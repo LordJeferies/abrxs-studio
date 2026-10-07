@@ -1,6 +1,6 @@
 import { BookOpen, Bot, Clapperboard, FileUp, Image as ImageIcon, Layers3, Settings2, Sparkles, WandSparkles } from 'lucide-react';
 import { useState } from 'react';
-import { CinemaPlayground } from './CinemaPlayground';
+import { CinemaPlaygroundFinal } from './CinemaPlaygroundFinal';
 import { CustomProviderSettings } from './CustomProviderSettings';
 import { DirectorStudioFinal } from './DirectorStudioFinal';
 import { FichaIntakePanel } from './FichaIntakePanel';
@@ -41,7 +41,7 @@ export function VisionV2Shell() {
           <button type="button" onClick={() => setView('studio')}><ImageIcon size={19}/><div><strong>{es ? 'Producción / Studio' : 'Production / Studio'}</strong><span>{es ? 'Imagen · video · storyboard · providers' : 'Image · video · storyboard · providers'}</span></div></button>
           <button type="button" onClick={() => setView('ficha')}><FileUp size={19}/><div><strong>{es ? 'Importar ficha' : 'Import ficha'}</strong><span>HTML · JSON · TXT</span></div></button>
           <button type="button" onClick={() => setView('xroll')}><Layers3 size={19}/><div><strong>XRoll Studio</strong><span>Layers · prompts · motion</span></div></button>
-          <button type="button" onClick={() => setView('learn')}><BookOpen size={19}/><div><strong>Cinema Playground</strong><span>{es ? 'Aprender comparando' : 'Learn by comparing'}</span></div></button>
+          <button type="button" onClick={() => setView('learn')}><BookOpen size={19}/><div><strong>Cinema Playground</strong><span>{es ? 'Comparar y aplicar decisiones' : 'Compare and apply decisions'}</span></div></button>
         </div>
         <section className="v2-principle"><Sparkles size={18}/><div><strong>{es ? 'Una sola intención. Muchas salidas.' : 'One intent. Many outputs.'}</strong><p>{es ? 'GenerationSpec mantiene la fuente de verdad. Director mejora. Copilot propone. Target compilers traducen. Creator ejecuta sólo cuando existe un provider real y tú lo confirmas.' : 'GenerationSpec remains the source of truth. Director improves. Copilot proposes. Target compilers translate. Creator executes only when a real provider exists and you confirm it.'}</p></div></section>
       </main>
@@ -74,7 +74,7 @@ export function VisionV2Shell() {
       {view === 'settings' && <div className="vision-v2-settings-stack"><VisionAISettings language={language}/><CustomProviderSettings language={language}/><VisionFirebaseSettings language={language}/></div>} 
       {view === 'ficha' && <FichaIntakePanel language={language} onCopy={copy}/>} 
       {view === 'xroll' && <XRollStudio language={language} onCopy={copy}/>} 
-      {view === 'learn' && <CinemaPlayground language={language}/>} 
+      {view === 'learn' && <CinemaPlaygroundFinal language={language}/>} 
       {view === 'studio' && <VisionApp/>}
     </main>
   </div>;
