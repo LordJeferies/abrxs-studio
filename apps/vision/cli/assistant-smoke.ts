@@ -6,6 +6,9 @@ const parsed = parseAssistantEnvelope(JSON.stringify({
   actions: [
     { type: 'set-director', field: 'focal', value: '85mm', reason: 'Increase isolation.' },
     { type: 'set-brief', field: 'mustHave', value: 'identity continuity; motivated side light' },
+    { type: 'set-v25-option', category: 'lens', optionId: '85mm', reason: 'Increase isolation without changing the source truth.' },
+    { type: 'replace-v25-source', value: 'A founder compares three proposals and stops before choosing because no criterion is visible.', reason: 'Make indecision observable.' },
+    { type: 'set-v25-option', category: 'lens', optionId: 'not-real', reason: 'invalid option' },
     { type: 'delete-project', field: 'idea', value: 'bad' },
     { type: 'set-director', field: 'notAField', value: 'bad' },
   ],
@@ -13,12 +16,16 @@ const parsed = parseAssistantEnvelope(JSON.stringify({
 }));
 
 assert.equal(parsed.message, 'Use a tighter framing and protect continuity.');
-assert.equal(parsed.actions.length, 2);
+assert.equal(parsed.actions.length, 4);
+assert.ok(parsed.actions.some((action) => action.type === 'set-v25-option'));
+assert.ok(parsed.actions.some((action) => action.type === 'replace-v25-source'));
 assert.equal(parsed.references.length, 1);
 assert.ok(sceneRecipes.length >= 8);
 assert.ok(sceneRecipes.some((recipe) => recipe.id === 'social-hook'));
 const prompt = buildVisionAssistantSystemPrompt('es');
 assert.match(prompt, /Vision Copilot/);
+assert.match(prompt, /set-v25-option/);
+assert.match(prompt, /CATÁLOGO DIRECTOR V2\.5/);
 assert.match(prompt, /Nunca ejecutes generación ni gasto/);
 assert.match(prompt, /RECETAS INTERNAS DE ESCENA/);
 const fallback = parseAssistantEnvelope('plain provider answer');
@@ -26,5 +33,7 @@ assert.equal(fallback.message, 'plain provider answer');
 assert.equal(fallback.actions.length, 0);
 
 console.log('✓ assistant response schema filters unknown actions');
+console.log('✓ V2.5 Director actions require valid catalog ids');
+console.log('✓ source replacement remains an explicit proposed action');
 console.log('✓ scene reference catalog is available');
 console.log('✓ assistant system prompt protects intent and spend boundary');
