@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import type { DirectorCategory, DirectorOption } from './directorFinal';
 
 export type ReferenceScene = {
@@ -79,7 +80,7 @@ export function sceneForCategory(category: DirectorCategory): ReferenceScene {
   return CATEGORY_SCENES[category] ?? HUMAN_PORTRAIT;
 }
 
-export function photographicStyle(option: DirectorOption) {
+export function photographicStyle(option: DirectorOption): CSSProperties {
   const p = option.preview;
   const warm = p.warmth ?? 0;
   const contrast = p.contrast ?? 1;
@@ -101,7 +102,7 @@ export function photographicStyle(option: DirectorOption) {
     '--ref-grain': String(Math.max(0, Math.min(1, grain))),
     '--ref-haze': String(Math.max(0, Math.min(1, haze))),
     '--ref-bloom': String(Math.max(0, Math.min(1, bloom))),
-  } as React.CSSProperties;
+  } as CSSProperties;
 }
 
 export function isDepthCategory(category: DirectorCategory) {
