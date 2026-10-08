@@ -1,3 +1,4 @@
-Abrxs Vision Art Creator V2.6 · Real Reference Creative UI
-release-trigger: 2026-10-07T22:43Z
-purpose: publish the validated V2.6 macOS build after the creative workspace navigation redesign, real photographic human/environment references, A/B visual comparison, category effect overlays, responsive mobile navigation, preserved V2.5 compatibility, and full Vision/Tauri gates landed on main
+Abrxs Vision Art Creator V2.6 · Ergonomic Camera Workspace + Signed Apple Silicon
+release-trigger: 2026-10-08T01:25Z
+source-main: 537469153d4bcb356936305d96c54617ed914984
+purpose: publish the validated V2.6 Director with Guided, Cinema Columns and Studio views; shared CameraSceneV26 for Director/Learn; option-specific real/curated visual references; draggable responsive Prompt Monitor; improved iPhone responsiveness; ad-hoc signed arm64 macOS bundle; codesign and ZIP round-trip verification; SHA-256 and verified installer
