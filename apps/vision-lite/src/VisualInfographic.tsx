@@ -44,7 +44,7 @@ function DepthGraphic({ spec }: Props) {
         <circle className="anchor-dot" cx={right} cy="35" r="1.5" />
         <Label x={85} y={25} align="end">{shallow ? 'Franja de enfoque' : 'Fondo legible'}</Label>
         <path className="focus-range" d={`M${left} 84 H${right}`} />
-        <Label x="50" y="91" align="middle">{shallow ? 'Zona nítida estrecha' : 'Zona de enfoque más amplia'}</Label>
+        <Label x={50} y={91} align="middle">{shallow ? 'Zona nítida estrecha' : 'Zona de enfoque más amplia'}</Label>
       </svg>
       <div className="info-chip"><Eye size={14} /><span>{spec.label}</span></div>
     </div>
@@ -64,10 +64,10 @@ function AngleGraphic({ spec }: Props) {
         <circle className="camera-node" cx="16" cy={camY} r="5" />
         <path className="angle-ray" d={`M21 ${camY} L56 ${targetY}`} />
         <path className="angle-arc" d={low ? 'M22 77 Q34 72 39 60' : overhead ? 'M20 17 Q31 27 34 39' : high ? 'M22 23 Q31 30 36 40' : 'M22 50 Q30 50 38 50'} />
-        <Label x="24" y={Math.max(10, camY - 9)}>{overhead ? 'Cenital' : low ? 'Cámara baja' : high ? 'Cámara alta' : 'Nivel de ojos'}</Label>
+        <Label x={24} y={Math.max(10, camY - 9)}>{overhead ? 'Cenital' : low ? 'Cámara baja' : high ? 'Cámara alta' : 'Nivel de ojos'}</Label>
         <line className="guide-line" x1="60" y1={targetY} x2="86" y2="32" />
         <circle className="anchor-dot" cx="60" cy={targetY} r="1.4" />
-        <Label x="89" y="30" align="end">{low ? 'Más autoridad' : high ? 'Más vulnerabilidad' : overhead ? 'Lectura gráfica' : 'Relación neutral'}</Label>
+        <Label x={89} y={30} align="end">{low ? 'Más autoridad' : high ? 'Más vulnerabilidad' : overhead ? 'Lectura gráfica' : 'Relación neutral'}</Label>
       </svg>
       <div className="camera-icon-float"><Camera size={18} /></div>
     </div>
@@ -84,10 +84,10 @@ function LightGraphic({ spec }: Props) {
         <circle className="light-node" cx={side} cy={sourceY} r="4" />
         {d !== 'ambient' && <path className="light-cone" d={d === 'right' ? 'M82 28 L58 38 L58 67 Z' : d === 'back' ? 'M50 17 L38 42 L62 42 Z' : 'M18 28 L42 38 L42 67 Z'} />}
         <line className="guide-line" x1={side} y1={sourceY} x2={d === 'right' ? 72 : d === 'back' ? 66 : 28} y2={d === 'back' ? 16 : 18} />
-        <Label x={d === 'right' ? 78 : d === 'back' ? 70 : 25} y="15" align={d === 'right' ? 'end' : 'start'}>{d === 'ambient' ? 'Luz envolvente' : d === 'back' ? 'Fuente detrás' : 'Luz principal lateral'}</Label>
+        <Label x={d === 'right' ? 78 : d === 'back' ? 70 : 25} y={15} align={d === 'right' ? 'end' : 'start'}>{d === 'ambient' ? 'Luz envolvente' : d === 'back' ? 'Fuente detrás' : 'Luz principal lateral'}</Label>
         <line className="face-divider" x1="50" y1="32" x2="50" y2="68" />
-        <Label x="38" y="76" align="middle">{d === 'ambient' ? 'Suave' : 'Luz'}</Label>
-        <Label x="64" y="76" align="middle">{d === 'ambient' ? 'Uniforme' : 'Sombra'}</Label>
+        <Label x={38} y={76} align="middle">{d === 'ambient' ? 'Suave' : 'Luz'}</Label>
+        <Label x={64} y={76} align="middle">{d === 'ambient' ? 'Uniforme' : 'Sombra'}</Label>
       </svg>
       <div className="light-icon-float"><SunMedium size={18} /></div>
     </div>
