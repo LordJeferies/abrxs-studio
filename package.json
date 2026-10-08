@@ -36,6 +36,9 @@
     "vision:desktop:check": "npm run desktop:check -w @abrxs/vision",
     "vision:desktop:test": "npm run desktop:test -w @abrxs/vision",
     "vision:desktop:build": "npm run desktop:build -w @abrxs/vision",
+    "vision-lite:dev": "npm run dev -w @abrxs/vision-lite",
+    "vision-lite:typecheck": "npm run typecheck -w @abrxs/vision-lite",
+    "vision-lite:build": "npm run build -w @abrxs/vision-lite",
     "typecheck": "npm run typecheck -w @abrxs/studio-web",
     "check": "npm run typecheck && npm run doctor",
     "doctor": "node scripts/doctor.mjs"
