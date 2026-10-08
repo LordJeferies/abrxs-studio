@@ -1,5 +1,6 @@
-import { Check, Eye } from 'lucide-react';
+import { Check, Eye, Info } from 'lucide-react';
 import { GROUPS, optionFor, type Category, type DirectionState } from './engine';
+import VisualInfographic from './VisualInfographic';
 import { GROUP_GUIDE, visualMeta } from './visualCatalog';
 
 type Props = {
@@ -16,7 +17,7 @@ export default function VisualPicker({ direction, activeCategory, onCategoryChan
   const selectedVisual = visualMeta(activeCategory, selected.id);
 
   return (
-    <section className="visual-picker" aria-label="Selector visual de dirección">
+    <section className={`visual-picker visual-picker-${activeCategory}`} aria-label="Selector visual de dirección">
       <div className="visual-category-tabs" role="tablist" aria-label="Categorías visuales">
         {GROUPS.map(item => {
           const current = optionFor(item.id, direction[item.id]);
@@ -60,19 +61,30 @@ export default function VisualPicker({ direction, activeCategory, onCategoryChan
               aria-pressed={active}
             >
               <div className="visual-option-image">
-                <img src={meta.image} alt={`Referencia visual ${option.label}`} loading="lazy" />
+                <img
+                  src={meta.image}
+                  alt={`Referencia visual para ${option.label}: ${meta.cue}`}
+                  loading="lazy"
+                  style={{ objectPosition: meta.imagePosition ?? 'center' }}
+                />
                 <div className="visual-option-gradient" />
-                <span className="reference-badge">Referencia orientativa</span>
+                <span className="reference-badge">Foto de referencia</span>
                 {active && <span className="selected-badge"><Check size={13} /> Seleccionado</span>}
+                <VisualInfographic spec={meta.infographic} />
                 <div className="visual-option-title">
                   <strong>{option.label}</strong>
                   <span>{option.short}</span>
                 </div>
               </div>
+
               <div className="visual-option-copy">
-                <span className="notice-label">Qué mirar</span>
+                <span className="notice-label">Qué debes notar</span>
                 <p>{meta.notice}</p>
-                <small>{meta.cue}</small>
+                <div className="visual-cue"><span />{meta.cue}</div>
+                <div className="visual-explanation">
+                  <Info size={12} />
+                  <span>{meta.explanation}</span>
+                </div>
               </div>
             </button>
           );
@@ -87,6 +99,10 @@ export default function VisualPicker({ direction, activeCategory, onCategoryChan
         <div>
           <span>Tradeoff</span>
           <p>{selected.tradeoff}</p>
+        </div>
+        <div className="visual-selected-learning">
+          <span>Cómo leer la referencia</span>
+          <p>{selectedVisual.explanation}</p>
         </div>
       </div>
     </section>
