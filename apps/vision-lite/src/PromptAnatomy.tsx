@@ -1,4 +1,4 @@
-import { ANATOMY_LEGEND, type AnatomyType, type Category, type PromptSegment } from './engine';
+import { ANATOMY_LEGEND, type Category, type PromptSegment } from './engine';
 
 export type AnatomyMode = 'underline' | 'highlight' | 'off';
 
