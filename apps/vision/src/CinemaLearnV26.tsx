@@ -36,6 +36,7 @@ export function CinemaLearnV26({ language }: { language: 'es' | 'en' }) {
   const current = optionById(selections[category]) ?? choices[0];
   const [aId, setAId] = useState(() => current?.id ?? '');
   const [bId, setBId] = useState(() => choices.find((option) => option.id !== current?.id)?.id ?? current?.id ?? '');
+  const [target, setTarget] = useState<'a' | 'b'>('b');
   const a = optionById(aId) ?? choices[0];
   const b = optionById(bId) ?? choices[1] ?? choices[0];
 
@@ -45,12 +46,18 @@ export function CinemaLearnV26({ language }: { language: 'es' | 'en' }) {
     setCategory(next);
     setAId(selected?.id ?? '');
     setBId(list.find((option) => option.id !== selected?.id)?.id ?? selected?.id ?? '');
+    setTarget('b');
   };
 
   const apply = (option: DirectorOption) => {
     const next = { ...selections, [option.category]: option.id };
     setSelections(next);
     localStorage.setItem('abrxsVisionV26Selections', JSON.stringify(next));
+  };
+
+  const chooseCompare = (id: string) => {
+    if (target === 'a') setAId(id);
+    else setBId(id);
   };
 
   if (!a || !b) return null;
@@ -65,8 +72,8 @@ export function CinemaLearnV26({ language }: { language: 'es' | 'en' }) {
     </nav>
 
     <div className="v26-learn-compare">
-      <article>
-        <header><span>A</span><strong>{a.label}</strong><button onClick={() => apply(a)}><WandSparkles size={13}/>{es ? 'Usar en Director' : 'Use in Director'}</button></header>
+      <article className={target === 'a' ? 'target' : ''}>
+        <header><button className="v26-ab-target" onClick={() => setTarget('a')}>A</button><strong>{a.label}</strong><button onClick={() => apply(a)}><WandSparkles size={13}/>{es ? 'Usar en Director' : 'Use in Director'}</button></header>
         <CameraSceneV26 selections={selections} override={a} label={`A · ${a.label}`}/>
         <RealExample option={a}/>
         <dl><div><dt>{es ? 'Qué cambia' : 'What changes'}</dt><dd>{a.effect}</dd></div><div><dt>{es ? 'Sensación' : 'Feel'}</dt><dd>{a.feel}</dd></div><div><dt>{es ? 'Úsalo para' : 'Use for'}</dt><dd>{a.useFor}</dd></div></dl>
@@ -74,8 +81,8 @@ export function CinemaLearnV26({ language }: { language: 'es' | 'en' }) {
 
       <div className="v26-learn-vs">VS</div>
 
-      <article>
-        <header><span>B</span><strong>{b.label}</strong><button onClick={() => apply(b)}><WandSparkles size={13}/>{es ? 'Usar en Director' : 'Use in Director'}</button></header>
+      <article className={target === 'b' ? 'target' : ''}>
+        <header><button className="v26-ab-target" onClick={() => setTarget('b')}>B</button><strong>{b.label}</strong><button onClick={() => apply(b)}><WandSparkles size={13}/>{es ? 'Usar en Director' : 'Use in Director'}</button></header>
         <CameraSceneV26 selections={selections} override={b} label={`B · ${b.label}`}/>
         <RealExample option={b}/>
         <dl><div><dt>{es ? 'Qué cambia' : 'What changes'}</dt><dd>{b.effect}</dd></div><div><dt>{es ? 'Sensación' : 'Feel'}</dt><dd>{b.feel}</dd></div><div><dt>{es ? 'Úsalo para' : 'Use for'}</dt><dd>{b.useFor}</dd></div></dl>
@@ -83,8 +90,8 @@ export function CinemaLearnV26({ language }: { language: 'es' | 'en' }) {
     </div>
 
     <section className="v26-learn-selector">
-      <header><span className="micro">SELECTOR</span><strong>{DIRECTOR_CATEGORIES.find((item) => item.id === category)?.description}</strong></header>
-      <div>{choices.map((option) => <button key={option.id} className={option.id === a.id || option.id === b.id ? 'active' : ''} onClick={() => option.id === a.id ? setBId(option.id) : setBId(option.id)}>
+      <header><div><span className="micro">SELECTOR</span><strong>{DIRECTOR_CATEGORIES.find((item) => item.id === category)?.description}</strong></div><div className="v26-ab-switch"><span>{es ? 'Editando' : 'Editing'}</span><button className={target === 'a' ? 'active' : ''} onClick={() => setTarget('a')}>A</button><button className={target === 'b' ? 'active' : ''} onClick={() => setTarget('b')}>B</button></div></header>
+      <div>{choices.map((option) => <button key={option.id} className={option.id === a.id || option.id === b.id ? 'active' : ''} onClick={() => chooseCompare(option.id)}>
         <span>{option.id === a.id ? 'A' : option.id === b.id ? 'B' : ''}</span><strong>{option.label}</strong><small>{option.short}</small>
         {selections[category] === option.id && <i><Check size={10}/> Director</i>}
       </button>)}</div>
