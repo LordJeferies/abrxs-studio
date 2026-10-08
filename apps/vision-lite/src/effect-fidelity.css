@@ -1,0 +1,57 @@
+/* Effect-fidelity pass: make the reference photo support the selected concept. */
+
+/* Shot size */
+.visual-option-image[data-category="shot"][data-option="wide"] .visual-photo-base{transform:scale(1.00)}
+.visual-option-image[data-category="shot"][data-option="medium"] .visual-photo-base{transform:scale(1.08)}
+.visual-option-image[data-category="shot"][data-option="mcu"] .visual-photo-base{transform:scale(1.22)}
+.visual-option-image[data-category="shot"][data-option="close"] .visual-photo-base{transform:scale(1.42)}
+
+/* Lens — pedagogical spatial treatment. Wide lenses retain more surroundings; telephotos calm the background. */
+.visual-option-image[data-category="lens"][data-option="24"] .visual-photo-base{filter:saturate(.98) contrast(1.02);transform:scale(1)}
+.visual-option-image[data-category="lens"][data-option="35"] .visual-photo-base{filter:saturate(.98) contrast(1.02);transform:scale(1.05)}
+.visual-option-image[data-category="lens"][data-option="50"] .visual-photo-base{filter:saturate(.96) contrast(1.03);transform:scale(1.10)}
+.visual-option-image[data-category="lens"][data-option="65"] .visual-photo-base{filter:saturate(.95) contrast(1.03);transform:scale(1.16)}
+.visual-option-image[data-category="lens"][data-option="85"] .visual-photo-base{filter:saturate(.94) contrast(1.04);transform:scale(1.23)}
+.visual-option-image[data-category="lens"][data-option="135"] .visual-photo-base{filter:saturate(.92) contrast(1.05);transform:scale(1.30)}
+
+/* Camera angle: reinforce the reading without pretending to be a physical camera simulation. */
+.visual-option-image[data-category="angle"][data-option="low"] .visual-photo-base{transform:scale(1.08) translateY(4%);transform-origin:50% 82%}
+.visual-option-image[data-category="angle"][data-option="eye"] .visual-photo-base{transform:scale(1.04)}
+.visual-option-image[data-category="angle"][data-option="high"] .visual-photo-base{transform:scale(1.06) translateY(-3%);transform-origin:50% 18%}
+.visual-option-image[data-category="angle"][data-option="overhead"] .visual-photo-base{transform:scale(1.02);filter:saturate(.9) contrast(1.08)}
+
+/* Lighting: the image itself now demonstrates the requested direction. */
+.visual-option-image[data-category="light"]::before{
+  content:"";position:absolute;inset:0;z-index:1;pointer-events:none;mix-blend-mode:screen;opacity:.78
+}
+.visual-option-image[data-category="light"]::after{
+  content:"";position:absolute;inset:0;z-index:1;pointer-events:none
+}
+.visual-option-image[data-category="light"][data-option="window"]::before{background:linear-gradient(100deg,rgba(255,224,175,.52),rgba(255,224,175,.06) 48%,transparent 72%)}
+.visual-option-image[data-category="light"][data-option="window"]::after{background:linear-gradient(270deg,rgba(0,0,0,.26),transparent 55%)}
+.visual-option-image[data-category="light"][data-option="rembrandt"]::before{background:radial-gradient(ellipse at 34% 30%,rgba(255,207,135,.54),transparent 38%)}
+.visual-option-image[data-category="light"][data-option="rembrandt"]::after{background:linear-gradient(90deg,transparent 35%,rgba(0,0,0,.52) 72%,rgba(0,0,0,.62))}
+.visual-option-image[data-category="light"][data-option="split"]::before{background:linear-gradient(90deg,rgba(255,207,135,.42) 0 48%,transparent 51%)}
+.visual-option-image[data-category="light"][data-option="split"]::after{background:linear-gradient(90deg,transparent 0 49%,rgba(0,0,0,.68) 52% 100%)}
+.visual-option-image[data-category="light"][data-option="back"]::before{background:radial-gradient(ellipse at 52% 16%,rgba(255,223,164,.62),transparent 33%)}
+.visual-option-image[data-category="light"][data-option="back"]::after{box-shadow:inset 0 0 55px rgba(255,199,105,.23);background:linear-gradient(180deg,transparent 35%,rgba(0,0,0,.22))}
+.visual-option-image[data-category="light"][data-option="overcast"]::before{background:rgba(214,226,235,.16)}
+.visual-option-image[data-category="light"][data-option="overcast"]::after{background:rgba(20,26,32,.10)}
+
+/* Look cards modify the photo itself, not only the overlay legend. */
+.visual-option-image[data-category="look"][data-option="neutral"] .visual-photo-base{filter:saturate(.96) contrast(1.02)}
+.visual-option-image[data-category="look"][data-option="cool"] .visual-photo-base{filter:saturate(.86) contrast(1.08) hue-rotate(8deg)}
+.visual-option-image[data-category="look"][data-option="warm"] .visual-photo-base{filter:saturate(1.08) contrast(1.02) sepia(.16)}
+.visual-option-image[data-category="look"][data-option="noir"] .visual-photo-base{filter:grayscale(.72) saturate(.45) contrast(1.32) brightness(.86)}
+
+/* Movement cards get spatial paths tied to the whole image. */
+.visual-option-image[data-category="movement"][data-option="push"] .visual-photo-base{animation:preview-push 3s ease-in-out infinite}
+.visual-option-image[data-category="movement"][data-option="truck"] .visual-photo-base{animation:preview-truck 3s ease-in-out infinite}
+.visual-option-image[data-category="movement"][data-option="handheld"] .visual-photo-base{animation:handheld-preview .7s steps(4,end) infinite}
+
+@keyframes preview-push{0%,100%{transform:scale(1.02)}50%{transform:scale(1.10)}}
+@keyframes preview-truck{0%,100%{transform:scale(1.06) translateX(-2%)}50%{transform:scale(1.06) translateX(2%)}}
+
+@media(prefers-reduced-motion:reduce){
+  .visual-option-image[data-category="movement"] .visual-photo-base{animation:none!important}
+}

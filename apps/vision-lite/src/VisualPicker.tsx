@@ -22,15 +22,8 @@ export default function VisualPicker({ direction, activeCategory, onCategoryChan
         {GROUPS.map(item => {
           const current = optionFor(item.id, direction[item.id]);
           return (
-            <button
-              key={item.id}
-              role="tab"
-              aria-selected={activeCategory === item.id}
-              className={activeCategory === item.id ? 'active' : ''}
-              onClick={() => onCategoryChange(item.id)}
-            >
-              <span>{item.label}</span>
-              <small>{current.label}</small>
+            <button key={item.id} role="tab" aria-selected={activeCategory === item.id} className={activeCategory === item.id ? 'active' : ''} onClick={() => onCategoryChange(item.id)}>
+              <span>{item.label}</span><small>{current.label}</small>
             </button>
           );
         })}
@@ -42,11 +35,7 @@ export default function VisualPicker({ direction, activeCategory, onCategoryChan
           <h3>{guide.question}</h3>
           <p>{guide.help}</p>
         </div>
-        <div className="selected-visual-summary">
-          <span>Actual</span>
-          <strong>{selected.label}</strong>
-          <small>{selectedVisual.cue}</small>
-        </div>
+        <div className="selected-visual-summary"><span>Actual</span><strong>{selected.label}</strong><small>{selectedVisual.cue}</small></div>
       </div>
 
       <div className="visual-card-track">
@@ -54,37 +43,27 @@ export default function VisualPicker({ direction, activeCategory, onCategoryChan
           const meta = visualMeta(activeCategory, option.id);
           const active = direction[activeCategory] === option.id;
           return (
-            <button
-              key={option.id}
-              className={`visual-option-card ${active ? 'active' : ''}`}
-              onClick={() => onSelect(activeCategory, option.id)}
-              aria-pressed={active}
-            >
-              <div className="visual-option-image">
-                <img
-                  src={meta.image}
-                  alt={`Referencia visual para ${option.label}: ${meta.cue}`}
-                  loading="lazy"
-                  style={{ objectPosition: meta.imagePosition ?? 'center' }}
-                />
+            <button key={option.id} className={`visual-option-card visual-option-${activeCategory} ${active ? 'active' : ''}`} data-option={option.id} onClick={() => onSelect(activeCategory, option.id)} aria-pressed={active}>
+              <div className="visual-option-image" data-category={activeCategory} data-option={option.id}>
+                <img className="visual-photo-base" src={meta.image} alt={`Referencia visual para ${option.label}: ${meta.cue}`} loading="lazy" style={{ objectPosition: meta.imagePosition ?? 'center' }} />
+                {activeCategory === 'aperture' && (
+                  <img className="visual-photo-subject" src={meta.image} alt="" aria-hidden="true" loading="lazy" style={{ objectPosition: meta.imagePosition ?? 'center' }} />
+                )}
                 <div className="visual-option-gradient" />
-                <span className="reference-badge">Foto de referencia</span>
+                <span className="reference-badge">Simulación + referencia</span>
                 {active && <span className="selected-badge"><Check size={13} /> Seleccionado</span>}
                 <VisualInfographic spec={meta.infographic} />
-                <div className="visual-option-title">
-                  <strong>{option.label}</strong>
-                  <span>{option.short}</span>
-                </div>
+              </div>
+
+              <div className="visual-card-footer">
+                <div><strong>{option.label}</strong><span>{option.short}</span></div>
+                <small>{meta.cue}</small>
               </div>
 
               <div className="visual-option-copy">
                 <span className="notice-label">Qué debes notar</span>
                 <p>{meta.notice}</p>
-                <div className="visual-cue"><span />{meta.cue}</div>
-                <div className="visual-explanation">
-                  <Info size={12} />
-                  <span>{meta.explanation}</span>
-                </div>
+                <div className="visual-explanation"><Info size={12} /><span>{meta.explanation}</span></div>
               </div>
             </button>
           );
@@ -92,18 +71,9 @@ export default function VisualPicker({ direction, activeCategory, onCategoryChan
       </div>
 
       <div className="visual-selected-explainer">
-        <div>
-          <span>Qué aporta</span>
-          <p>{selected.why}</p>
-        </div>
-        <div>
-          <span>Tradeoff</span>
-          <p>{selected.tradeoff}</p>
-        </div>
-        <div className="visual-selected-learning">
-          <span>Cómo leer la referencia</span>
-          <p>{selectedVisual.explanation}</p>
-        </div>
+        <div><span>Qué aporta</span><p>{selected.why}</p></div>
+        <div><span>Tradeoff</span><p>{selected.tradeoff}</p></div>
+        <div className="visual-selected-learning"><span>Cómo leer la referencia</span><p>{selectedVisual.explanation}</p></div>
       </div>
     </section>
   );

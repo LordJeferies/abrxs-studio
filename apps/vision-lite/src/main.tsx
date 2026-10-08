@@ -4,6 +4,8 @@ import App from './App';
 import './styles.css';
 import './visual-upgrade.css';
 import './animated-visuals.css';
+import './true-infographic.css';
+import './effect-fidelity.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
