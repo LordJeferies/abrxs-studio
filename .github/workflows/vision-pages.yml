@@ -6,6 +6,7 @@ on:
     paths:
       - 'apps/vision/**'
       - 'apps/vision-v3/**'
+      - 'apps/vision-lite/**'
       - 'packages/design-system/**'
       - 'package.json'
       - '.github/workflows/vision-pages.yml'
@@ -43,11 +44,16 @@ jobs:
         run: |
           npm run typecheck -w @abrxs/vision-v3
           npm run build -w @abrxs/vision-v3
+      - name: Validate Vision Lite
+        run: |
+          npm run vision-lite:typecheck
+          npm run vision-lite:build
       - name: Prepare Pages artifact
         run: |
-          mkdir -p site/vision site/vision-v3
+          mkdir -p site/vision site/vision-v3 site/vision-lite
           cp -R apps/vision/dist/. site/vision/
           cp -R apps/vision-v3/dist/. site/vision-v3/
+          cp -R apps/vision-lite/dist/. site/vision-lite/
           cat > site/index.html <<'EOF'
           <!doctype html><html><head><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=./vision-v3/"><title>Abrxs Studio</title></head><body><a href="./vision-v3/">Open Abrxs Vision V3</a></body></html>
           EOF
