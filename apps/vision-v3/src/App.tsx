@@ -61,6 +61,7 @@ const GROUPS: Group[] = [
       { id: '24', label: '24 mm', sub: 'Expansivo', prompt: '24mm wide-angle perspective with pronounced spatial depth', why: 'Hace visibles foreground y entorno.', tradeoff: 'Puede exagerar perspectiva.', image: images.office },
       { id: '35', label: '35 mm', sub: 'Natural con contexto', prompt: '35mm contextual perspective', why: 'Se siente cercano sin comprimir demasiado.', tradeoff: 'Aísla menos.', image: images.portrait },
       { id: '50', label: '50 mm', sub: 'Neutral', prompt: '50mm normal lens with balanced perspective', why: 'Punto medio estable para narrativa.', tradeoff: 'Menos carácter espacial.', image: images.portrait2 },
+      { id: '65', label: '65 mm', sub: 'Íntimo equilibrado', prompt: '65mm short-telephoto perspective with gentle compression', why: 'Aísla el sujeto sin comprimir tanto como 85 mm.', tradeoff: 'Reduce algo de contexto frente a 50 mm.', image: images.portrait2 },
       { id: '85', label: '85 mm', sub: 'Comprimido e íntimo', prompt: '85mm portrait lens with compressed background', why: 'Aísla el sujeto y calma el fondo.', tradeoff: 'Reduce contexto.', image: images.portrait3 },
       { id: '135', label: '135 mm', sub: 'Telefoto', prompt: '135mm telephoto compression with strong isolation', why: 'Comprime planos de forma marcada.', tradeoff: 'Necesita más distancia.', image: images.cinema }
     ]
@@ -142,20 +143,21 @@ function DirectionScene({ sel, compact = false }: { sel: DirectionState; compact
   const lightX = ({ window: 220, rembrandt: 340, split: 760, back: 500, overcast: 500 } as Record<string, number>)[sel.light] ?? 220;
   const movement = sel.movement === 'push' ? 'PUSH' : sel.movement === 'truck' ? 'TRUCK' : sel.movement === 'handheld' ? 'HANDHELD' : 'LOCKED';
   const color = sel.look === 'cool' ? '#9cb8d8' : sel.look === 'warm' ? '#e8b98e' : sel.look === 'noir' ? '#e2e2e2' : '#c9d2dc';
+  const key = `${focal}-${aperture}-${sel.angle}-${sel.light}-${sel.look}`;
 
   return <div className={compact ? 'scene compact' : 'scene'}>
     <svg viewBox="0 0 1000 620" role="img" aria-label="Camera simulation">
       <defs>
-        <linearGradient id={`wall-${focal}-${aperture}`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#313946"/><stop offset="1" stopColor="#12161d"/></linearGradient>
-        <radialGradient id={`light-${focal}-${aperture}`} cx={`${lightX / 10}%`} cy="34%" r="48%"><stop offset="0" stopColor={color} stopOpacity={sel.light === 'overcast' ? .3 : .82}/><stop offset="1" stopColor={color} stopOpacity="0"/></radialGradient>
-        <filter id={`bg-${focal}-${aperture}`}><feGaussianBlur stdDeviation={blur}/></filter>
-        <filter id={`shadow-${focal}-${aperture}`}><feDropShadow dx="0" dy="18" stdDeviation="14" floodColor="#000" floodOpacity=".55"/></filter>
+        <linearGradient id={`wall-${key}`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#313946"/><stop offset="1" stopColor="#12161d"/></linearGradient>
+        <radialGradient id={`light-${key}`} cx={`${lightX / 10}%`} cy="34%" r="48%"><stop offset="0" stopColor={color} stopOpacity={sel.light === 'overcast' ? .3 : .82}/><stop offset="1" stopColor={color} stopOpacity="0"/></radialGradient>
+        <filter id={`bg-${key}`}><feGaussianBlur stdDeviation={blur}/></filter>
+        <filter id={`shadow-${key}`}><feDropShadow dx="0" dy="18" stdDeviation="14" floodColor="#000" floodOpacity=".55"/></filter>
       </defs>
       <rect width="1000" height="620" fill="#080a0e"/>
-      <rect width="1000" height={horizon + 120} fill={`url(#wall-${focal}-${aperture})`}/>
+      <rect width="1000" height={horizon + 120} fill={`url(#wall-${key})`}/>
       <path d={`M0 ${horizon + 82}H1000V620H0Z`} fill="#080a0e"/>
       {[70, 205, 345, 655, 795, 930].map(x => <line key={x} x1={x} y1="620" x2="500" y2={horizon + 82} stroke="#ffffff12"/>)}
-      <g filter={`url(#bg-${focal}-${aperture})`} transform={`translate(${500 - 310 * backgroundScale} ${horizon - 130}) scale(${backgroundScale})`}>
+      <g filter={`url(#bg-${key})`} transform={`translate(${500 - 310 * backgroundScale} ${horizon - 130}) scale(${backgroundScale})`}>
         <rect width="620" height="300" rx="24" fill="#1d2630" stroke="#ffffff18"/>
         <rect x="44" y="28" width="160" height="210" rx="8" fill="#7890a7" opacity=".4"/>
         <path d="M124 28v210M44 132h160" stroke="#dbe9f655" strokeWidth="4"/>
@@ -163,7 +165,7 @@ function DirectionScene({ sel, compact = false }: { sel: DirectionState; compact
         <circle cx="430" cy="122" r="36" fill="#334455"/>
         <rect x="238" y="205" width="240" height="22" rx="8" fill="#443a34"/>
       </g>
-      <g transform={`translate(500 400) scale(${shotScale})`} filter={`url(#shadow-${focal}-${aperture})`}>
+      <g transform={`translate(500 400) scale(${shotScale})`} filter={`url(#shadow-${key})`}>
         <ellipse cx="0" cy="138" rx="90" ry="20" fill="#0008"/>
         <path d="M-54-36 Q0-79 54-36 L64 97 Q34 123 0 124 Q-34 123-64 97Z" fill="#343a44"/>
         <rect x="-16" y="-78" width="32" height="31" rx="12" fill="#a97964"/>
@@ -178,7 +180,7 @@ function DirectionScene({ sel, compact = false }: { sel: DirectionState; compact
         <path d="M31 96 L38 214" stroke="#262b32" strokeWidth="31" strokeLinecap="round"/>
         <path d="M-53 217h38M18 217h39" stroke="#111319" strokeWidth="17" strokeLinecap="round"/>
       </g>
-      <rect width="1000" height="620" fill={`url(#light-${focal}-${aperture})`} style={{ mixBlendMode: 'screen' }}/>
+      <rect width="1000" height="620" fill={`url(#light-${key})`} style={{ mixBlendMode: 'screen' }}/>
       {sel.light === 'split' && <rect width="500" height="620" fill="#000" opacity=".36"/>}
       {sel.light === 'back' && <ellipse cx="500" cy="350" rx="124" ry="188" fill="none" stroke="#ffe0a988" strokeWidth="10"/>}
       {!compact && <g className="camera-hud">
