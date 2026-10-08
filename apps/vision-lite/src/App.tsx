@@ -4,10 +4,12 @@ import {
   PanelRightOpen, RotateCcw, Send, Sparkles, WandSparkles, X
 } from 'lucide-react';
 import {
-  ANATOMY_LEGEND, DEFAULTS, GROUPS, analyzeSource, buildExportText,
-  buildHiggsfieldExport, compilePrompt, compileSegments, optionFor,
-  type Category, type DirectionState, type Recommendation, type Target
+  DEFAULTS, GROUPS, analyzeSource, buildHiggsfieldExport, compilePrompt,
+  compileSegments, optionFor, type Category, type DirectionState,
+  type Recommendation, type Target
 } from './engine';
+import PromptAnatomy, { type AnatomyMode } from './PromptAnatomy';
+import VisualPicker from './VisualPicker';
 
 type Message = {
   id: string;
@@ -53,7 +55,7 @@ export default function App() {
   const [activeCategory, setActiveCategory] = useState<Category>('shot');
   const [target, setTarget] = useState<Target>('generic');
   const [outputMode, setOutputMode] = useState<OutputMode>('prompt');
-  const [showAnatomy, setShowAnatomy] = useState(true);
+  const [anatomyMode, setAnatomyMode] = useState<AnatomyMode>('underline');
   const [promptOpen, setPromptOpen] = useState(true);
   const [controlsOpen, setControlsOpen] = useState(true);
   const endRef = useRef<HTMLDivElement>(null);
@@ -61,8 +63,6 @@ export default function App() {
   const segments = useMemo(() => compileSegments(source, direction), [source, direction]);
   const compiledPrompt = useMemo(() => compilePrompt(source, direction), [source, direction]);
   const higgsfield = useMemo(() => buildHiggsfieldExport(source, direction), [source, direction]);
-  const activeGroup = GROUPS.find(g => g.id === activeCategory)!;
-  const activeOption = optionFor(activeCategory, direction[activeCategory]);
 
   useEffect(() => {
     localStorage.setItem('vision-lite-source', source);
@@ -93,7 +93,7 @@ export default function App() {
 
   function applyRecommendation(rec: Recommendation) {
     setDirection(prev => ({ ...prev, [rec.category]: rec.optionId }));
-    setActiveCategory(rec.category);
+    openCategory(rec.category);
   }
 
   function applyAll(recommendations: Recommendation[]) {
@@ -104,12 +104,26 @@ export default function App() {
     });
   }
 
+  function selectOption(category: Category, optionId: string) {
+    setDirection(prev => ({ ...prev, [category]: optionId }));
+    setActiveCategory(category);
+  }
+
+  function openCategory(category: Category) {
+    setActiveCategory(category);
+    setControlsOpen(true);
+    if (typeof window !== 'undefined' && window.matchMedia('(max-width: 760px)').matches) {
+      setPromptOpen(false);
+    }
+  }
+
   function resetDirection() {
     setDirection(DEFAULTS);
     setMessages(initialMessages);
     setSource('');
     setDraft('');
     setActiveCategory('shot');
+    setAnatomyMode('underline');
   }
 
   async function copyText(text: string) {
@@ -127,7 +141,7 @@ export default function App() {
           <div className="brand-mark"><WandSparkles size={17} /></div>
           <div>
             <strong>Vision Lite</strong>
-            <span>Prompt Director</span>
+            <span>Conversational Prompt Director</span>
           </div>
         </div>
 
@@ -149,7 +163,7 @@ export default function App() {
             <div className="chat-intro">
               <span className="eyebrow">SOURCE → DIRECTION → PROMPT</span>
               <h1>Describe lo que quieres crear.</h1>
-              <p>Vision conserva tu idea y te ayuda a dirigir cámara, óptica, luz, movimiento y look sin obligarte a saber cinematografía.</p>
+              <p>Vision conserva tu idea, propone decisiones visuales y te deja elegirlas viendo una referencia y entendiendo qué cambia.</p>
             </div>
 
             <div className="messages">
@@ -179,7 +193,7 @@ export default function App() {
                                 <span className="rec-category">{categoryLabel(rec.category)}</span>
                                 <strong>{opt.label}</strong>
                                 <small>{rec.reason}</small>
-                                <span className="rec-action">{applied ? 'Aplicado' : 'Aplicar'}</span>
+                                <span className="rec-action">{applied ? 'Ver selección' : 'Aplicar y ver'}</span>
                               </button>
                             );
                           })}
@@ -193,41 +207,17 @@ export default function App() {
             </div>
           </div>
 
-          <div className="director-controls">
+          <div className="director-controls visual-director-controls">
             <button className="controls-toggle mobile-only" onClick={() => setControlsOpen(v => !v)}>
-              Dirección visual <ChevronDown size={16} className={controlsOpen ? 'rotated' : ''} />
+              Selector visual · {categoryLabel(activeCategory)} <ChevronDown size={16} className={controlsOpen ? 'rotated' : ''} />
             </button>
-            <div className={`controls-inner ${controlsOpen ? 'open' : ''}`}>
-              <div className="category-tabs" role="tablist">
-                {GROUPS.map(group => (
-                  <button
-                    key={group.id}
-                    className={activeCategory === group.id ? 'active' : ''}
-                    onClick={() => setActiveCategory(group.id)}
-                  >
-                    {group.label}
-                    <span>{optionFor(group.id, direction[group.id]).label}</span>
-                  </button>
-                ))}
-              </div>
-
-              <div className="option-strip">
-                {activeGroup.options.map(option => (
-                  <button
-                    key={option.id}
-                    className={direction[activeCategory] === option.id ? 'active' : ''}
-                    onClick={() => setDirection(prev => ({ ...prev, [activeCategory]: option.id }))}
-                  >
-                    <strong>{option.label}</strong>
-                    <span>{option.short}</span>
-                  </button>
-                ))}
-              </div>
-
-              <div className="tip-row">
-                <div><span>Qué aporta</span><p>{activeOption.why}</p></div>
-                <div><span>Tradeoff</span><p>{activeOption.tradeoff}</p></div>
-              </div>
+            <div className={`controls-inner visual-controls-inner ${controlsOpen ? 'open' : ''}`}>
+              <VisualPicker
+                direction={direction}
+                activeCategory={activeCategory}
+                onCategoryChange={setActiveCategory}
+                onSelect={selectOption}
+              />
             </div>
           </div>
 
@@ -268,13 +258,12 @@ export default function App() {
           </div>
 
           {outputMode === 'prompt' ? (
-            <div className={`anatomy-output ${showAnatomy ? 'anatomy-on' : ''}`}>
-              {segments.map((segment, index) => (
-                <span key={`${segment.type}-${index}`} className={`segment segment-${segment.type}`} title={segment.label}>
-                  {segment.text}{index < segments.length - 1 ? ', ' : '.'}
-                </span>
-              ))}
-            </div>
+            <PromptAnatomy
+              segments={segments}
+              mode={anatomyMode}
+              onModeChange={setAnatomyMode}
+              onOpenCategory={openCategory}
+            />
           ) : (
             <pre className="json-output">{outputText}</pre>
           )}
@@ -286,20 +275,6 @@ export default function App() {
               outputText,
               outputMode === 'json' ? 'application/json' : 'text/plain'
             )}><Download size={15} /> Exportar</button>
-          </div>
-
-          <div className="anatomy-settings">
-            <div className="settings-heading">
-              <strong>Prompt Anatomy</strong>
-              <button className={`tiny-switch ${showAnatomy ? 'on' : ''}`} onClick={() => setShowAnatomy(v => !v)}>
-                <span /> {showAnatomy ? 'On' : 'Off'}
-              </button>
-            </div>
-            <div className="legend">
-              {ANATOMY_LEGEND.map(item => (
-                <span key={item.type} className={`legend-${item.type}`}><i />{item.label}</span>
-              ))}
-            </div>
           </div>
 
           <div className="before-after">
