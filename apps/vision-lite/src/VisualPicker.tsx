@@ -42,13 +42,12 @@ export default function VisualPicker({ direction, activeCategory, onCategoryChan
         {group.options.map(option => {
           const meta = visualMeta(activeCategory, option.id);
           const active = direction[activeCategory] === option.id;
-          const dof = activeCategory === 'aperture' ? Number(option.id) : undefined;
           return (
             <button key={option.id} className={`visual-option-card visual-option-${activeCategory} ${active ? 'active' : ''}`} data-option={option.id} onClick={() => onSelect(activeCategory, option.id)} aria-pressed={active}>
               <div className="visual-option-image" data-category={activeCategory} data-option={option.id}>
                 <img className="visual-photo-base" src={meta.image} alt={`Referencia visual para ${option.label}: ${meta.cue}`} loading="lazy" style={{ objectPosition: meta.imagePosition ?? 'center' }} />
                 {activeCategory === 'aperture' && (
-                  <img className="visual-photo-subject" src={meta.image} alt="" aria-hidden="true" loading="lazy" style={{ objectPosition: meta.imagePosition ?? 'center', ['--dof' as string]: String(dof ?? 4) }} />
+                  <img className="visual-photo-subject" src={meta.image} alt="" aria-hidden="true" loading="lazy" style={{ objectPosition: meta.imagePosition ?? 'center' }} />
                 )}
                 <div className="visual-option-gradient" />
                 <span className="reference-badge">Simulación + referencia</span>
