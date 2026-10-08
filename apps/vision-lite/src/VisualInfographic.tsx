@@ -1,50 +1,70 @@
-import { Camera, Eye, MoveHorizontal, MoveRight, SunMedium } from 'lucide-react';
+import { Camera, Eye, MoveHorizontal, MoveRight, SunMedium, LockKeyhole } from 'lucide-react';
 import type { InfographicSpec } from './visualCatalog';
 
 type Props = { spec: InfographicSpec };
 
-function Label({ x, y, children, align = 'start' }: { x: number; y: number; children: string; align?: 'start' | 'middle' | 'end' }) {
-  return <text x={x} y={y} textAnchor={align} className="inf-label">{children}</text>;
+function Label({ x, y, children, align = 'start', emphasis = false }: { x: number | string; y: number | string; children: string; align?: 'start' | 'middle' | 'end'; emphasis?: boolean }) {
+  return <text x={x} y={y} textAnchor={align} className={`inf-label ${emphasis ? 'inf-label-emphasis' : ''}`}>{children}</text>;
 }
 
 function FovGraphic({ spec }: Props) {
-  const wide = (spec.value ?? 50) >= 60;
-  const narrow = (spec.value ?? 50) <= 38;
-  const edge = wide ? 92 : narrow ? 68 : 80;
+  const value = Math.max(18, Math.min(88, spec.value ?? 50));
+  const halfWidth = 12 + value * .36;
+  const left = 50 - halfWidth;
+  const right = 50 + halfWidth;
+  const wide = value >= 60;
+  const narrow = value <= 38;
   return (
     <div className="photo-infographic photo-infographic-fov">
       <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-        <path className="guide-cone" d={`M10 88 L${100 - edge} 26 L${edge} 26 Z`} />
-        <circle className="anchor-dot" cx="10" cy="88" r="1.8" />
-        <line className="guide-line" x1="12" y1="86" x2="32" y2="70" />
-        <Label x={34} y={69}>{wide ? 'Campo de visión más amplio' : narrow ? 'Campo de visión más estrecho' : 'Campo de visión equilibrado'}</Label>
-        <line className="guide-line" x1="72" y1="30" x2="89" y2="18" />
-        <circle className="anchor-dot" cx="72" cy="30" r="1.3" />
-        <Label x={90} y={16} align="end">{wide ? 'Más entorno visible' : narrow ? 'Fondo más comprimido' : 'Perspectiva natural'}</Label>
+        <defs>
+          <linearGradient id={`fov-${value}`} x1="0" x2="0" y1="1" y2="0">
+            <stop offset="0" stopColor="rgba(121,205,255,.26)" />
+            <stop offset="1" stopColor="rgba(121,205,255,.02)" />
+          </linearGradient>
+        </defs>
+        <path className="guide-cone" fill={`url(#fov-${value})`} d={`M50 90 L${left} 26 L${right} 26 Z`} />
+        <circle className="camera-node" cx="50" cy="90" r="3.5" />
+        <line className="guide-line" x1="50" y1="86" x2="50" y2="62" />
+        <Label x={50} y={58} align="middle" emphasis>{wide ? 'CAMPO AMPLIO' : narrow ? 'CAMPO ESTRECHO' : 'CAMPO NATURAL'}</Label>
+        <line className="guide-line" x1={left + 2} y1="30" x2="13" y2="18" />
+        <circle className="anchor-dot" cx={left + 2} cy="30" r="1.3" />
+        <Label x="10" y="15">{wide ? 'Más entorno' : narrow ? 'Menos entorno' : 'Contexto equilibrado'}</Label>
+        <line className="guide-line" x1={right - 2} y1="30" x2="88" y2="18" />
+        <circle className="anchor-dot" cx={right - 2} cy="30" r="1.3" />
+        <Label x="91" y="15" align="end">{wide ? 'Perspectiva marcada' : narrow ? 'Fondo comprimido' : 'Profundidad natural'}</Label>
+        <path className="fov-bracket" d={`M${left} 78 Q50 70 ${right} 78`} />
+        <Label x="50" y="82" align="middle">{spec.label}</Label>
       </svg>
-      <div className="camera-chip"><Camera size={15} /><b>{spec.label.split('·')[0]}</b></div>
+      <div className="camera-chip"><Camera size={15} /><b>{spec.label}</b></div>
     </div>
   );
 }
 
 function DepthGraphic({ spec }: Props) {
   const amount = Math.max(20, Math.min(86, spec.value ?? 50));
-  const left = 50 - amount / 4;
-  const right = 50 + amount / 4;
+  const width = 12 + amount * .42;
+  const left = 50 - width / 2;
+  const right = 50 + width / 2;
   const shallow = amount < 40;
   return (
     <div className="photo-infographic photo-infographic-depth">
       <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-        <line className="focus-boundary" x1={left} y1="12" x2={left} y2="76" />
-        <line className="focus-boundary" x1={right} y1="12" x2={right} y2="76" />
-        <line className="guide-line" x1={left} y1="35" x2="17" y2="25" />
-        <circle className="anchor-dot" cx={left} cy="35" r="1.5" />
-        <Label x={15} y={23}>{shallow ? 'Fondo desenfocado' : 'Primer plano nítido'}</Label>
-        <line className="guide-line" x1={right} y1="35" x2="83" y2="27" />
-        <circle className="anchor-dot" cx={right} cy="35" r="1.5" />
-        <Label x={85} y={25} align="end">{shallow ? 'Franja de enfoque' : 'Fondo legible'}</Label>
-        <path className="focus-range" d={`M${left} 84 H${right}`} />
-        <Label x={50} y={91} align="middle">{shallow ? 'Zona nítida estrecha' : 'Zona de enfoque más amplia'}</Label>
+        <rect className="focus-zone" x={left} y="10" width={right - left} height="68" rx="2" />
+        <line className="focus-boundary" x1={left} y1="10" x2={left} y2="78" />
+        <line className="focus-boundary" x1={right} y1="10" x2={right} y2="78" />
+        <circle className="plane-dot plane-foreground" cx="22" cy="72" r="1.7" />
+        <circle className="plane-dot plane-subject" cx="50" cy="55" r="2.1" />
+        <circle className="plane-dot plane-background" cx="79" cy="36" r="1.7" />
+        <Label x="18" y="80" align="middle">Primer plano</Label>
+        <Label x="50" y="64" align="middle" emphasis>Sujeto</Label>
+        <Label x="82" y="44" align="middle">Fondo</Label>
+        <path className="focus-range" d={`M${left} 88 H${right}`} />
+        <line className="focus-cap" x1={left} y1="84" x2={left} y2="92" />
+        <line className="focus-cap" x1={right} y1="84" x2={right} y2="92" />
+        <Label x="50" y="97" align="middle">{shallow ? 'Zona nítida muy estrecha' : 'Zona nítida más amplia'}</Label>
+        <line className="guide-line" x1={right} y1="22" x2="87" y2="13" />
+        <Label x="91" y="11" align="end">{shallow ? 'Fondo se disuelve' : 'Más planos legibles'}</Label>
       </svg>
       <div className="info-chip"><Eye size={14} /><span>{spec.label}</span></div>
     </div>
@@ -54,20 +74,24 @@ function DepthGraphic({ spec }: Props) {
 function AngleGraphic({ spec }: Props) {
   const deg = spec.value ?? 0;
   const low = deg < -8;
-  const high = deg > 8 && deg < 70;
   const overhead = deg >= 70;
-  const camY = low ? 76 : overhead ? 12 : high ? 20 : 50;
-  const targetY = overhead ? 50 : 42;
+  const high = deg > 8 && !overhead;
+  const camX = overhead ? 50 : 18;
+  const camY = low ? 79 : overhead ? 12 : high ? 20 : 50;
+  const targetX = 52;
+  const targetY = overhead ? 52 : 45;
   return (
     <div className="photo-infographic photo-infographic-angle">
       <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-        <circle className="camera-node" cx="16" cy={camY} r="5" />
-        <path className="angle-ray" d={`M21 ${camY} L56 ${targetY}`} />
-        <path className="angle-arc" d={low ? 'M22 77 Q34 72 39 60' : overhead ? 'M20 17 Q31 27 34 39' : high ? 'M22 23 Q31 30 36 40' : 'M22 50 Q30 50 38 50'} />
-        <Label x={24} y={Math.max(10, camY - 9)}>{overhead ? 'Cenital' : low ? 'Cámara baja' : high ? 'Cámara alta' : 'Nivel de ojos'}</Label>
-        <line className="guide-line" x1="60" y1={targetY} x2="86" y2="32" />
-        <circle className="anchor-dot" cx="60" cy={targetY} r="1.4" />
-        <Label x={89} y={30} align="end">{low ? 'Más autoridad' : high ? 'Más vulnerabilidad' : overhead ? 'Lectura gráfica' : 'Relación neutral'}</Label>
+        <line className="horizon-line" x1="8" y1="50" x2="92" y2="50" />
+        <circle className="camera-node" cx={camX} cy={camY} r="5" />
+        <path className="angle-ray" d={`M${camX + (overhead ? 0 : 5)} ${camY} L${targetX} ${targetY}`} />
+        <circle className="anchor-dot" cx={targetX} cy={targetY} r="1.7" />
+        <path className="angle-arc" d={low ? 'M23 79 Q34 76 39 62' : overhead ? 'M46 17 Q50 28 50 40' : high ? 'M23 21 Q33 28 38 41' : 'M23 50 Q31 50 39 50'} />
+        <Label x={overhead ? 58 : 25} y={Math.max(9, camY - 9)}>{overhead ? 'Cámara cenital' : low ? 'Cámara baja' : high ? 'Cámara alta' : 'Nivel de ojos'}</Label>
+        <line className="guide-line" x1={targetX} y1={targetY} x2="88" y2="28" />
+        <Label x="91" y="25" align="end" emphasis>{low ? 'AUTORIDAD' : high ? 'VULNERABILIDAD' : overhead ? 'LECTURA GRÁFICA' : 'NEUTRALIDAD'}</Label>
+        <Label x="50" y="94" align="middle">{spec.label}</Label>
       </svg>
       <div className="camera-icon-float"><Camera size={18} /></div>
     </div>
@@ -76,18 +100,24 @@ function AngleGraphic({ spec }: Props) {
 
 function LightGraphic({ spec }: Props) {
   const d = spec.direction ?? 'left';
-  const side = d === 'right' ? 86 : d === 'back' ? 50 : 14;
-  const sourceY = d === 'back' ? 12 : 24;
+  const right = d === 'right';
+  const back = d === 'back';
+  const ambient = d === 'ambient';
+  const side = right ? 88 : back ? 50 : 12;
+  const sourceY = back ? 12 : 22;
   return (
     <div className={`photo-infographic photo-infographic-light light-${d}`}>
       <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-        <circle className="light-node" cx={side} cy={sourceY} r="4" />
-        {d !== 'ambient' && <path className="light-cone" d={d === 'right' ? 'M82 28 L58 38 L58 67 Z' : d === 'back' ? 'M50 17 L38 42 L62 42 Z' : 'M18 28 L42 38 L42 67 Z'} />}
-        <line className="guide-line" x1={side} y1={sourceY} x2={d === 'right' ? 72 : d === 'back' ? 66 : 28} y2={d === 'back' ? 16 : 18} />
-        <Label x={d === 'right' ? 78 : d === 'back' ? 70 : 25} y={15} align={d === 'right' ? 'end' : 'start'}>{d === 'ambient' ? 'Luz envolvente' : d === 'back' ? 'Fuente detrás' : 'Luz principal lateral'}</Label>
-        <line className="face-divider" x1="50" y1="32" x2="50" y2="68" />
-        <Label x={38} y={76} align="middle">{d === 'ambient' ? 'Suave' : 'Luz'}</Label>
-        <Label x={64} y={76} align="middle">{d === 'ambient' ? 'Uniforme' : 'Sombra'}</Label>
+        <circle className="light-node" cx={side} cy={sourceY} r="4.3" />
+        {!ambient && <path className="light-cone" d={right ? 'M84 25 L58 36 L58 69 Z' : back ? 'M50 16 L37 44 L63 44 Z' : 'M16 25 L42 36 L42 69 Z'} />}
+        <circle className="face-model" cx="50" cy="52" r="16" />
+        {!ambient && <path className={`face-lit-side face-lit-${d}`} d={right ? 'M50 36 A16 16 0 0 1 50 68 Z' : back ? 'M50 36 A16 16 0 1 0 50 68 A16 16 0 1 0 50 36' : 'M50 36 A16 16 0 0 0 50 68 Z'} />}
+        <line className="face-divider" x1="50" y1="36" x2="50" y2="68" />
+        <line className="guide-line" x1={side} y1={sourceY} x2={right ? 72 : back ? 65 : 28} y2={back ? 17 : 17} />
+        <Label x={right ? 77 : back ? 70 : 24} y="14" align={right ? 'end' : 'start'}>{ambient ? 'Fuente enorme y difusa' : back ? 'Fuente detrás del sujeto' : 'Key lateral'}</Label>
+        <Label x="36" y="77" align="middle">{ambient ? 'Suave' : 'Lado iluminado'}</Label>
+        <Label x="66" y="77" align="middle">{ambient ? 'Uniforme' : 'Lado en sombra'}</Label>
+        <Label x="50" y="92" align="middle" emphasis>{spec.label.toUpperCase()}</Label>
       </svg>
       <div className="light-icon-float"><SunMedium size={18} /></div>
     </div>
@@ -96,23 +126,32 @@ function LightGraphic({ spec }: Props) {
 
 function FramingGraphic({ spec }: Props) {
   const v = spec.value ?? 18;
-  const inset = Math.max(8, 30 - v * .7);
+  const insetY = v < 15 ? 15 : v > 26 ? 7 : 11;
+  const insetX = v < 15 ? 22 : v > 26 ? 33 : 27;
   return (
     <div className="photo-infographic photo-infographic-framing">
-      <div className="subject-frame" style={{ inset: `${Math.max(6, inset)}% ${Math.max(10, inset * .72)}%` }} />
-      <div className="callout callout-top">{v < 15 ? 'Más entorno' : v > 26 ? 'Rostro dominante' : 'Sujeto + contexto'}</div>
-      <div className="callout callout-bottom">{spec.label}</div>
+      <div className="thirds-grid" aria-hidden="true"><i /><i /><b /><b /></div>
+      <div className="subject-frame" style={{ inset: `${insetY}% ${insetX}%` }} />
+      <div className="callout callout-top">{v < 15 ? 'Entorno protagonista' : v > 26 ? 'Rostro protagonista' : 'Persona + contexto'}</div>
+      <div className="framing-measure"><span>{v < 15 ? 'CUERPO + ESPACIO' : v > 26 ? 'ROSTRO' : 'TORSO'}</span><strong>{spec.label}</strong></div>
     </div>
   );
 }
 
 function MotionGraphic({ spec }: Props) {
   const d = spec.direction ?? 'static';
+  const label = d === 'push' ? 'Entrar hacia el sujeto' : d === 'truck' ? 'Desplazamiento lateral' : d === 'handheld' ? 'Microvariación orgánica' : 'Sin desplazamiento';
   return (
     <div className={`photo-infographic photo-infographic-motion motion-${d}`}>
+      <svg className="motion-path-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        {d === 'push' && <><path className="motion-trajectory" d="M14 82 C34 74 48 62 62 44" /><circle className="motion-target" cx="64" cy="42" r="2" /></>}
+        {d === 'truck' && <><path className="motion-trajectory" d="M12 80 C35 72 62 72 88 80" /><circle className="motion-target" cx="88" cy="80" r="2" /></>}
+        {d === 'handheld' && <path className="motion-trajectory motion-wobble" d="M16 78 C28 65 37 82 50 68 C62 55 73 77 86 61" />}
+        {d === 'static' && <><line className="motion-static-line" x1="19" y1="70" x2="19" y2="88" /><line className="motion-static-line" x1="12" y1="79" x2="26" y2="79" /></>}
+      </svg>
       <div className="motion-origin"><Camera size={17} /></div>
-      {d === 'static' ? <div className="motion-lock-label">LOCKED · sin desplazamiento</div> : <div className="motion-arrow">{d === 'truck' ? <MoveHorizontal size={42} /> : <MoveRight size={42} />}</div>}
-      <div className="motion-copy">{d === 'push' ? 'La cámara entra hacia el sujeto' : d === 'truck' ? 'La cámara se desplaza lateralmente' : d === 'handheld' ? 'Microvariación orgánica' : 'Composición estable'}</div>
+      {d === 'static' ? <div className="motion-lock-label"><LockKeyhole size={12} /> LOCKED</div> : <div className="motion-arrow">{d === 'truck' ? <MoveHorizontal size={38} /> : <MoveRight size={38} />}</div>}
+      <div className="motion-copy"><strong>{label}</strong><span>{spec.label}</span></div>
     </div>
   );
 }
@@ -121,8 +160,9 @@ function GradeGraphic({ spec }: Props) {
   return (
     <div className={`photo-infographic photo-infographic-grade grade-${spec.direction ?? 'neutral'}`}>
       <div className="grade-divider" />
-      <span className="grade-left">RAW</span><span className="grade-right">LOOK</span>
-      <div className="grade-caption">{spec.label}</div>
+      <span className="grade-left">BASE</span><span className="grade-right">LOOK</span>
+      <div className="grade-swatch-row"><i /><i /><i /><i /></div>
+      <div className="grade-caption"><strong>{spec.label}</strong><span>Contraste · temperatura · saturación</span></div>
     </div>
   );
 }

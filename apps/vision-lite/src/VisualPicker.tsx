@@ -1,7 +1,9 @@
-import { Check, Eye, Info } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Check, Eye, Info, ImageOff, ShieldCheck } from 'lucide-react';
 import { GROUPS, optionFor, type Category, type DirectionState } from './engine';
 import VisualInfographic from './VisualInfographic';
-import { GROUP_GUIDE, visualMeta } from './visualCatalog';
+import { GROUP_GUIDE } from './visualCatalog';
+import { REFERENCE_FALLBACK, referenceFor, validateReferenceCatalog, warmReferenceCache } from './referenceRuntime';
 
 type Props = {
   direction: DirectionState;
@@ -10,11 +12,48 @@ type Props = {
   onSelect: (category: Category, optionId: string) => void;
 };
 
+function ReferenceImage({ src, alt, position, duplicateForSubject = false }: { src: string; alt: string; position?: string; duplicateForSubject?: boolean }) {
+  const [failed, setFailed] = useState(false);
+  const actualSrc = failed ? REFERENCE_FALLBACK : src;
+  const style = { objectPosition: position ?? 'center' };
+
+  return (
+    <>
+      <img
+        className={`visual-photo-base ${failed ? 'reference-failed' : ''}`}
+        src={actualSrc}
+        alt={alt}
+        loading="lazy"
+        decoding="async"
+        style={style}
+        onError={() => setFailed(true)}
+      />
+      {duplicateForSubject && (
+        <img
+          className="visual-photo-subject"
+          src={actualSrc}
+          alt=""
+          aria-hidden="true"
+          loading="lazy"
+          decoding="async"
+          style={style}
+        />
+      )}
+      {failed && <span className="reference-error-badge"><ImageOff size={12} /> Fallback seguro</span>}
+    </>
+  );
+}
+
 export default function VisualPicker({ direction, activeCategory, onCategoryChange, onSelect }: Props) {
   const group = GROUPS.find(item => item.id === activeCategory)!;
   const guide = GROUP_GUIDE[activeCategory];
   const selected = optionFor(activeCategory, direction[activeCategory]);
-  const selectedVisual = visualMeta(activeCategory, selected.id);
+  const selectedVisual = referenceFor(activeCategory, selected.id);
+  const report = useMemo(() => validateReferenceCatalog(), []);
+
+  useEffect(() => {
+    warmReferenceCache(activeCategory, selected.id);
+  }, [activeCategory, selected.id]);
 
   return (
     <section className={`visual-picker visual-picker-${activeCategory}`} aria-label="Selector visual de dirección">
@@ -35,22 +74,23 @@ export default function VisualPicker({ direction, activeCategory, onCategoryChan
           <h3>{guide.question}</h3>
           <p>{guide.help}</p>
         </div>
-        <div className="selected-visual-summary"><span>Actual</span><strong>{selected.label}</strong><small>{selectedVisual.cue}</small></div>
+        <div className="selected-visual-summary">
+          <span>Actual</span><strong>{selected.label}</strong><small>{selectedVisual.cue}</small>
+          <em className={report.issues.length ? 'catalog-warning' : 'catalog-ok'}><ShieldCheck size={11} /> {report.uniqueImages}/{report.totalOptions} referencias únicas</em>
+        </div>
       </div>
 
       <div className="visual-card-track">
         {group.options.map(option => {
-          const meta = visualMeta(activeCategory, option.id);
+          const meta = referenceFor(activeCategory, option.id);
           const active = direction[activeCategory] === option.id;
           return (
             <button key={option.id} className={`visual-option-card visual-option-${activeCategory} ${active ? 'active' : ''}`} data-option={option.id} onClick={() => onSelect(activeCategory, option.id)} aria-pressed={active}>
               <div className="visual-option-image" data-category={activeCategory} data-option={option.id}>
-                <img className="visual-photo-base" src={meta.image} alt={`Referencia visual para ${option.label}: ${meta.cue}`} loading="lazy" style={{ objectPosition: meta.imagePosition ?? 'center' }} />
-                {activeCategory === 'aperture' && (
-                  <img className="visual-photo-subject" src={meta.image} alt="" aria-hidden="true" loading="lazy" style={{ objectPosition: meta.imagePosition ?? 'center' }} />
-                )}
+                <div className="reference-skeleton" aria-hidden="true" />
+                <ReferenceImage src={meta.image} alt={`Referencia visual para ${option.label}: ${meta.cue}`} position={meta.imagePosition} duplicateForSubject={activeCategory === 'aperture'} />
                 <div className="visual-option-gradient" />
-                <span className="reference-badge">Simulación + referencia</span>
+                <span className="reference-badge">Referencia + explicación técnica</span>
                 {active && <span className="selected-badge"><Check size={13} /> Seleccionado</span>}
                 <VisualInfographic spec={meta.infographic} />
               </div>
