@@ -3,7 +3,7 @@ import type { InfographicSpec } from './visualCatalog';
 
 type Props = { spec: InfographicSpec };
 
-function Label({ x, y, children, align = 'start', emphasis = false }: { x: number; y: number; children: string; align?: 'start' | 'middle' | 'end'; emphasis?: boolean }) {
+function Label({ x, y, children, align = 'start', emphasis = false }: { x: number | string; y: number | string; children: string; align?: 'start' | 'middle' | 'end'; emphasis?: boolean }) {
   return <text x={x} y={y} textAnchor={align} className={`inf-label ${emphasis ? 'inf-label-emphasis' : ''}`}>{children}</text>;
 }
 
