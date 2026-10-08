@@ -1,0 +1,26 @@
+name: Vision V3 CI
+
+on:
+  pull_request:
+    paths:
+      - 'apps/vision-v3/**'
+      - '.github/workflows/vision-v3-ci.yml'
+      - '.github/workflows/vision-pages.yml'
+  push:
+    branches: ['feat/vision-v3']
+    paths:
+      - 'apps/vision-v3/**'
+      - '.github/workflows/vision-v3-ci.yml'
+      - '.github/workflows/vision-pages.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm install
+      - run: npm run typecheck -w @abrxs/vision-v3
+      - run: npm run build -w @abrxs/vision-v3
