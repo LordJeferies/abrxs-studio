@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'apps/vision/**'
+      - 'apps/vision-v3/**'
       - 'packages/design-system/**'
       - 'package.json'
       - '.github/workflows/vision-pages.yml'
@@ -38,12 +39,17 @@ jobs:
       - run: npm run vision:director:mcp:smoke
       - run: npm run vision:pro:mcp:smoke
       - run: npm run vision:build:pages
+      - name: Validate Vision V3
+        run: |
+          npm run typecheck -w @abrxs/vision-v3
+          npm run build -w @abrxs/vision-v3
       - name: Prepare Pages artifact
         run: |
-          mkdir -p site/vision
+          mkdir -p site/vision site/vision-v3
           cp -R apps/vision/dist/. site/vision/
+          cp -R apps/vision-v3/dist/. site/vision-v3/
           cat > site/index.html <<'EOF'
-          <!doctype html><html><head><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=./vision/"><title>Abrxs Studio</title></head><body><a href="./vision/">Open Abrxs Vision Art Creator</a></body></html>
+          <!doctype html><html><head><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=./vision-v3/"><title>Abrxs Studio</title></head><body><a href="./vision-v3/">Open Abrxs Vision V3</a></body></html>
           EOF
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
