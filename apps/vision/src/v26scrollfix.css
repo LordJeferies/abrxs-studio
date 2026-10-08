@@ -1,0 +1,113 @@
+/* V2.6 scroll ownership repair.
+   Legacy Vision keeps body overflow hidden; V2.6 owns an explicit internal viewport. */
+
+.vision-v26-app{
+  height:100dvh;
+  min-height:0;
+  overflow:hidden;
+}
+
+.v26-global-main{
+  height:100dvh;
+  min-height:0;
+  overflow:hidden;
+}
+
+.v26-global-topbar{
+  flex:0 0 54px;
+}
+
+.v26-route-content{
+  min-height:0;
+  flex:1 1 auto;
+  overflow-y:auto;
+  overflow-x:hidden;
+  overscroll-behavior-y:contain;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-gutter:stable;
+}
+
+.v26-director-root,
+.v26-director-route{
+  min-height:100%;
+}
+
+.v26-director-commandbar{
+  top:0;
+}
+
+.v26-guided-roadmap{
+  top:76px;
+  max-height:calc(100dvh - 154px);
+}
+
+.v26-creative-canvas{
+  overflow:visible;
+}
+
+.v26-cinema-columns-overlay{
+  overscroll-behavior:contain;
+}
+
+.v26-cinema-columns-card{
+  max-height:calc(100dvh - 36px);
+  overflow:auto;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+}
+
+.v26-wheel-list{
+  overscroll-behavior:contain;
+  touch-action:pan-y;
+}
+
+.v26-cinema-columns-scroll,
+.v26-recipe-scroll,
+.v26-view-switch,
+.v26-guided-options>div{
+  touch-action:pan-x pan-y;
+}
+
+@media (max-width: 780px){
+  .vision-v26-app{
+    height:100dvh;
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+
+  .v26-global-main{
+    height:100dvh;
+  }
+
+  .v26-route-content{
+    padding-bottom:calc(82px + env(safe-area-inset-bottom));
+    scroll-padding-bottom:calc(98px + env(safe-area-inset-bottom));
+  }
+
+  .v26-director-commandbar{
+    top:0;
+  }
+
+  .v26-guided-layout,
+  .v26-cinema-columns-embedded{
+    margin-bottom:20px;
+  }
+
+  .v26-guided-roadmap{
+    position:relative;
+    top:auto;
+    max-height:none;
+    overflow:visible;
+  }
+
+  .v26-cinema-columns-overlay{
+    padding:0;
+    align-items:end;
+  }
+
+  .v26-cinema-columns-card{
+    width:100%;
+    max-height:min(92dvh,900px);
+    border-radius:24px 24px 0 0;
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+}
