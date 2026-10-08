@@ -1,12 +1,12 @@
 import { Copy, GripHorizontal, Maximize2, Minimize2, PanelBottom, PanelRight, X } from 'lucide-react';
 import { useMemo, useRef, useState, type PointerEvent } from 'react';
-import type { PromptAnatomySegment } from './promptAnatomyV25';
+import type { AnatomySegment } from './promptAnatomyV25';
 import { anatomyGroup } from './v26Core';
 
 type Props = {
   language: 'es' | 'en';
   prompt: string;
-  segments: PromptAnatomySegment[];
+  segments: AnatomySegment[];
   open: boolean;
   onClose: () => void;
 };
@@ -83,7 +83,7 @@ export function PromptMonitorV26({ language, prompt, segments, open, onClose }: 
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
     >
-      <div className="v26-prompt-drag"><GripHorizontal size={16}/><span><small>LIVE PROMPT</small><strong>{es ? 'Prompt Monitor' : 'Prompt Monitor'}</strong></span></div>
+      <div className="v26-prompt-drag"><GripHorizontal size={16}/><span><small>LIVE PROMPT</small><strong>Prompt Monitor</strong></span></div>
       <nav>
         <button type="button" onClick={() => navigator.clipboard.writeText(prompt)} title={es ? 'Copiar prompt' : 'Copy prompt'}><Copy size={14}/></button>
         <button type="button" onClick={() => setDock(dock === 'right' ? 'floating' : 'right')} title={es ? 'Acoplar a la derecha' : 'Dock right'}><PanelRight size={14}/></button>
@@ -99,9 +99,7 @@ export function PromptMonitorV26({ language, prompt, segments, open, onClose }: 
         <button type="button" className={showLegend ? 'active' : ''} onClick={() => setShowLegend((value) => !value)}>{es ? 'Leyenda' : 'Legend'}</button>
       </div>
 
-      <div className="v26-prompt-monitor-body">
-        <div className="v26-prompt-monitor-text">{anatomy}</div>
-      </div>
+      <div className="v26-prompt-monitor-body"><div className="v26-prompt-monitor-text">{anatomy}</div></div>
 
       {showLegend && <footer className="v26-prompt-monitor-legend">
         {LEGEND.map(([category, label]) => <span key={category}><i style={{ background: COLORS[category] ?? '#808894' }}/>{label}</span>)}
