@@ -24,6 +24,7 @@ jobs:
         with:
           node-version: 24
       - uses: dtolnay/rust-toolchain@stable
+      - run: rustup target add aarch64-apple-darwin
       - run: npm install
       - run: chmod +x scripts/*.sh
       - run: npm run vision:typecheck
@@ -37,31 +38,82 @@ jobs:
       - run: npm run vision:pro:mcp:smoke
       - run: npm run vision:build
       - run: npm run vision:desktop:check
-      - run: npm run vision:desktop:build
-      - name: Package Vision V2.6
+
+      - name: Build Apple Silicon app with ad-hoc signature
+        run: npm --workspace @abrxs/vision run desktop:build -- --target aarch64-apple-darwin
+
+      - name: Verify Apple Silicon bundle before packaging
         run: |
-          APP="$(find apps/vision/src-tauri/target/release/bundle/macos -maxdepth 1 -name '*.app' -print -quit)"
+          APP="$(find apps/vision/src-tauri/target/aarch64-apple-darwin/release/bundle/macos -maxdepth 1 -name '*.app' -print -quit)"
           test -n "$APP"
+          BIN="$(find "$APP/Contents/MacOS" -maxdepth 1 -type f -perm -111 -print -quit)"
+          test -n "$BIN"
+
+          echo "Application: $APP"
+          echo "Executable:  $BIN"
+          file "$BIN"
+          file "$BIN" | grep -q 'arm64'
+
+          codesign --verify --deep --strict --verbose=2 "$APP"
+          codesign --display --verbose=4 "$APP" 2>&1 | tee /tmp/vision-codesign.txt
+          grep -Eq 'Signature=adhoc|Authority=' /tmp/vision-codesign.txt
+
+          echo "Gatekeeper assessment (informational; ad-hoc builds are not notarized):"
+          spctl --assess --type execute --verbose=4 "$APP" || true
+
+      - name: Package and re-verify Vision V2.6
+        run: |
+          APP="$(find apps/vision/src-tauri/target/aarch64-apple-darwin/release/bundle/macos -maxdepth 1 -name '*.app' -print -quit)"
+          test -n "$APP"
+
           mkdir -p dist/vision
-          ditto -c -k --sequesterRsrc --keepParent "$APP" dist/vision/Abrxs-Vision-Art-Creator-macOS-v2.6.zip
-          shasum -a 256 dist/vision/Abrxs-Vision-Art-Creator-macOS-v2.6.zip > dist/vision/Abrxs-Vision-Art-Creator-macOS-v2.6.sha256
+          ZIP="dist/vision/Abrxs-Vision-Art-Creator-macOS-Apple-Silicon-v2.6.zip"
+          SHA="dist/vision/Abrxs-Vision-Art-Creator-macOS-Apple-Silicon-v2.6.sha256"
+
+          ditto -c -k --sequesterRsrc --keepParent "$APP" "$ZIP"
+
+          (
+            cd dist/vision
+            shasum -a 256 "$(basename "$ZIP")" > "$(basename "$SHA")"
+          )
+
+          rm -rf /tmp/vision-release-verify
+          mkdir -p /tmp/vision-release-verify
+          ditto -x -k "$ZIP" /tmp/vision-release-verify
+          VERIFY_APP="$(find /tmp/vision-release-verify -maxdepth 2 -name '*.app' -type d -print -quit)"
+          test -n "$VERIFY_APP"
+          VERIFY_BIN="$(find "$VERIFY_APP/Contents/MacOS" -maxdepth 1 -type f -perm -111 -print -quit)"
+          test -n "$VERIFY_BIN"
+
+          codesign --verify --deep --strict --verbose=2 "$VERIFY_APP"
+          file "$VERIFY_BIN" | grep -q 'arm64'
+
+          cp scripts/install-vision-macos.sh dist/vision/Install-Abrxs-Vision-macOS.sh
+          chmod +x dist/vision/Install-Abrxs-Vision-macOS.sh
+
+          echo "Release package verified after ZIP round-trip."
+          cat "$SHA"
+
       - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_NOTE: ${{ inputs.notes }}
         run: |
           TAG="vision-v2.6.${GITHUB_RUN_NUMBER}"
-          NOTE="Abrxs Vision V2.6 Director Intelligence stable build from ${GITHUB_SHA}. Source Truth → Source Intelligence → explainable cinematic direction → visual comparison → ABRAXAS output. V2/V2.5 core, Fichas, XRoll, Copilot, providers and MCP preserved."
+          NOTE="Abrxs Vision V2.6 Director Intelligence for Apple Silicon. This build is compiled for arm64 and ad-hoc signed, then verified with codesign before and after ZIP packaging. It fixes the previous unsigned build that macOS could report as damaged. Ad-hoc signing is not Apple notarization, so Gatekeeper can still ask for approval. The included verified installer checks SHA-256, validates the signature, clears quarantine only for this app bundle, installs to ~/Applications, and opens it."
           if [ -n "${RELEASE_NOTE:-}" ]; then NOTE="$NOTE\n\n$RELEASE_NOTE"; fi
+
           gh release create "$TAG" \
-            dist/vision/Abrxs-Vision-Art-Creator-macOS-v2.6.zip \
-            dist/vision/Abrxs-Vision-Art-Creator-macOS-v2.6.sha256 \
+            dist/vision/Abrxs-Vision-Art-Creator-macOS-Apple-Silicon-v2.6.zip \
+            dist/vision/Abrxs-Vision-Art-Creator-macOS-Apple-Silicon-v2.6.sha256 \
+            dist/vision/Install-Abrxs-Vision-macOS.sh \
             --target "$GITHUB_SHA" \
-            --title "Abrxs Vision V2.6 Director Intelligence · build ${GITHUB_RUN_NUMBER}" \
+            --title "Abrxs Vision V2.6 Apple Silicon · build ${GITHUB_RUN_NUMBER}" \
             --notes "$NOTE" \
             --latest
+
       - uses: actions/upload-artifact@v4
         with:
-          name: Abrxs-Vision-Art-Creator-macOS-v2.6
+          name: Abrxs-Vision-Art-Creator-macOS-Apple-Silicon-v2.6
           path: dist/vision/*
           if-no-files-found: error
