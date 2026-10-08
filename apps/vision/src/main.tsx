@@ -20,6 +20,7 @@ import './v25final.css';
 import './v25providers.css';
 import './v25playground.css';
 import './v26.css';
+import './v26workstation.css';
 import { VisionI18nProvider } from './i18n';
 import { registerVisionPwa } from './pwa';
 import { VisionV2Shell } from './VisionV2Shell';
